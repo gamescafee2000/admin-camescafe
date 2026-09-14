@@ -1,0 +1,3475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>كيمز كوفي | نظام إدارة المبيعات الذكي</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#f39c12">
+    <link rel="icon" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="كيمز كوفي">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --accent-color: #f39c12; /* اللون الافتراضي القابل للتغيير يدوياً */
+            --ps4-color: #0037c4;
+            --ps4-limit-color: #d35400;
+            --text-color: #ffffff;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+            --border-color: #404040;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: calc(6px + env(safe-area-inset-top)) 4px calc(6px + env(safe-area-inset-bottom)) 4px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden; 
+            font-size: 0.82rem;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #222 0%, #2d2d2d 100%);
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .app-logo {
+            width: 28px;
+            height: 28px;
+            background: #222;
+            border: 2px solid var(--accent-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-name h1 {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .brand-name p {
+            margin: 0;
+            font-size: 0.6rem;
+            color: #bbb;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .network-status {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        .status-online { background-color: rgba(46, 204, 113, 0.2); color: var(--success-color); }
+        .status-offline { background-color: rgba(231, 76, 60, 0.2); color: var(--danger-color); }
+
+        .btn-settings {
+            background-color: #333;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .btn-settings:active { background-color: #444; }
+
+        .tables-bar {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 2px 2px 6px 2px;
+            border-bottom: 1px solid var(--border-color);
+            -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
+        }
+
+        .tables-bar::-webkit-scrollbar { height: 3px; }
+        .tables-bar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .table-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+            font-size: 0.78rem;
+            position: relative;
+        }
+
+        .table-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); color: #000; }
+        .table-btn.has-items { border-color: var(--success-color); }
+        .table-btn.ps-running { border-color: #3498db; animation: pulse 2s infinite; }
+        
+        .table-btn.time-out-alert { 
+            background-color: var(--danger-color) !important; 
+            color: white !important; 
+            border-color: white !important;
+            animation: red-flash 0.8s infinite; 
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+
+        @keyframes red-flash {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(231, 76, 96, 0.8); }
+            50% { transform: scale(1.05); opacity: 0.7; box-shadow: 0 0 12px 6px rgba(231, 76, 96, 0.4); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(231, 76, 96, 0); }
+        }
+
+        .main-content { display: flex; flex: 1; gap: 6px; overflow: hidden; margin-top: 4px; }
+
+        .menu-section { 
+            flex: 1.3; 
+            overflow-y: auto; 
+            background-color: var(--card-bg); 
+            border-radius: 6px; 
+            padding: 6px; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        .category-block { margin-bottom: 8px; }
+        .category-title { margin-top: 0; color: var(--accent-color); font-size: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 2px; margin-bottom: 4px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 4px; }
+        
+        .product-card {
+            background-color: #383838;
+            border-radius: 5px;
+            padding: 6px 2px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .product-card:active { transform: scale(0.95); background-color: #484848; }
+        .product-card.ps-btn { background-color: var(--ps4-color); }
+        .product-card.ps-limit-btn { background-color: var(--ps4-limit-color); }
+
+        .prod-name { display: block; font-size: 0.72rem; font-weight: 500; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .prod-price { display: block; font-size: 0.68rem; color: var(--accent-color); }
+        .product-card.ps-btn .prod-price, .product-card.ps-limit-btn .prod-price { color: #fff; opacity: 0.9; }
+
+        .invoice-section { 
+            flex: 1; 
+            background-color: var(--card-bg); 
+            border-radius: 6px; 
+            padding: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .invoice-scrollable-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .current-table-title { margin-top: 0; margin-bottom: 6px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn-transfer {
+            background-color: #34495e;
+            color: #fff;
+            border: 1px solid #5d6d7e;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 0.68rem;
+            cursor: pointer;
+        }
+
+        .order-list { margin: 4px 0; }
+        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #3d3d3d; font-size: 0.78rem; }
+        .item-details { flex: 1; }
+        .item-actions { display: flex; align-items: center; gap: 4px; }
+        
+        .qty-btn { background-color: #444; color: white; border: none; width: 18px; height: 18px; border-radius: 3px; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+        .pay-item-btn { background-color: var(--success-color); color: #000; font-weight: bold; border: none; padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; cursor: pointer; transition: background 0.2s; }
+        .pay-item-btn:active { background-color: #27ae60; }
+
+        .ps-timer-box {
+            background: #1a1a1a; padding: 6px; border-radius: 5px; margin-bottom: 4px; border: 1px solid #0037c4;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .ps-timer-box.is-limit { border-color: var(--ps4-limit-color); }
+        .ps-timer-box.has-alarm-triggered { border-color: var(--danger-color); background-color: #3a1313; animation: red-flash 1s infinite; }
+        .ps-timer-info { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .ps-time-log { font-size: 0.65rem; color: #bbb; display: flex; justify-content: space-between; border-top: 1px dashed #333; padding-top: 2px; }
+        .ps-timer-actions button { padding: 2px 6px; border: none; border-radius: 3px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+        .btn-stop-ps { background-color: var(--danger-color); color: white; }
+        .btn-silence-alarm { background-color: #f1c40f; color: #000; }
+        .btn-edit-start-time { background-color: #2980b9; color: white; border: none; padding: 1px 4px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; }
+
+        .discount-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #222;
+            padding: 4px 6px;
+            border-radius: 5px;
+            margin-bottom: 4px;
+            border: 1px dashed var(--border-color);
+        }
+        .discount-label { font-size: 0.72rem; color: #bbb; }
+        .discount-input {
+            width: 65px;
+            background: #333;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.78rem;
+        }
+        .discount-input::-webkit-outer-spin-button,
+        .discount-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .checkout-area { 
+            border-top: 1px solid var(--border-color); 
+            padding-top: 4px;
+            background-color: var(--card-bg);
+            flex-shrink: 0;
+        }
+        .total-box { display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: bold; margin-bottom: 4px; }
+        .total-val { color: var(--success-color); }
+        
+        .action-btns { display: flex; gap: 4px; }
+        .btn { flex: 1; padding: 7px; border: none; border-radius: 5px; font-size: 0.82rem; font-weight: bold; cursor: pointer; }
+        .btn-print { background-color: var(--accent-color); color: #000; }
+        .btn-close-bill { background-color: var(--success-color); color: white; }
+        
+        .btn-send-report {
+            width: 100%;
+            background-color: #8e44ad;
+            color: white;
+            border: 1px solid #9b59b6;
+            margin-top: 4px;
+            padding: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-send-report:active { background-color: #6c3483; }
+
+        /* ستايل المودال المخصص للإعدادات */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.85); 
+            align-items: center; 
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: auto;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 550px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+        .modal-header {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #222;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .modal-header h2 { margin: 0; font-size: 0.95rem; color: var(--accent-color); }
+        .close-modal { color: #aaa; font-size: 20px; font-weight: bold; cursor: pointer; }
+        .close-modal:hover { color: #fff; }
+        
+        .modal-body {
+            padding: 12px;
+            overflow-y: auto;
+            flex: 1;
+            font-size: 0.8rem;
+        }
+
+        /* شريط التبويبات الأفقي لتعديل الإعدادات */
+        .settings-tabs-bar {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            -webkit-overflow-scrolling: touch;
+        }
+        .settings-tab-btn {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .settings-tab-btn.active {
+            background-color: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+
+        .settings-section {
+            background-color: #222;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .settings-section h3 { margin-top: 0; margin-bottom: 8px; font-size: 0.82rem; color: #fff; border-bottom: 1px dashed #444; padding-bottom: 4px; }
+        
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .form-group label { width: 85px; font-size: 0.75rem; color: #bbb; }
+        .form-group input, .form-group select {
+            flex: 1;
+            background-color: #333;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+        .btn-add-item {
+            background-color: var(--success-color);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.8rem;
+        }
+        
+        .settings-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        .settings-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px;
+            border-bottom: 1px solid #333;
+            background: #252525;
+            border-radius: 3px;
+        }
+        .settings-item-row:last-child { border-bottom: none; }
+        .row-info { display: flex; flex-direction: column; gap: 2px; }
+        .row-cat { font-size: 0.6rem; color: var(--accent-color); }
+        .row-actions { display: flex; gap: 4px; align-items: center; }
+        .btn-row-edit { background-color: #3498db; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; }
+        .btn-row-delete { background-color: var(--danger-color); color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; }
+
+        /* ستايل لوحة الإنجازات */
+        .achievement-card {
+            background-color: #2c3e50;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #34495e;
+        }
+        .achievement-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 0.82rem;
+            margin-bottom: 4px;
+        }
+        .achievement-desc {
+            font-size: 0.68rem;
+            color: #bdc3c7;
+            margin-bottom: 6px;
+        }
+        .achievement-progress-bar {
+            background-color: #1a1a1a;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 2px;
+        }
+        .achievement-progress {
+            background-color: #2ecc71;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .achievement-status-txt {
+            font-size: 0.62rem;
+            text-align: left;
+            color: #2ecc71;
+        }
+
+        .developer-credits {
+            text-align: center;
+            font-size: 0.68rem;
+            color: #eee;
+            margin-top: 5px;
+            padding-bottom: 2px;
+            font-weight: 500;
+        }
+        .developer-credits .dev-name {
+            color: var(--accent-color);
+            font-weight: bold;
+            text-shadow: 0 0 4px rgba(243, 156, 18, 0.4);
+        }
+
+        @media (max-width: 800px) {
+            body { overflow: hidden; height: 100vh; height: 100dvh; }
+            .main-content { flex-direction: row; overflow: hidden; }
+            .menu-section { flex: 1.3; height: 100%; } 
+            .invoice-section { flex: 1; height: 100%; } 
+        }
+
+        @media print {
+            @page { size: auto; margin: 0mm; }
+            body { background: white; color: black; font-size: 10px; padding: 0; margin: 0; }
+            body * { visibility: hidden; }
+            .invoice-section, .invoice-section * { visibility: visible; }
+            .invoice-section { position: absolute; left: 0; top: 0; width: 100% !important; background: white; color: black; padding: 4px; margin: 0; }
+            .invoice-scrollable-area { overflow: visible !important; max-height: none !important; }
+            .qty-btn, .pay-item-btn, .action-btns, .tables-bar, .ps-timer-actions, .developer-credits, .app-header, .btn-transfer, .discount-input, .btn-send-report, .btn-edit-start-time { display: none !important; }
+            .discount-container { background: white; border: none; color: black; padding: 2px 0; }
+            .discount-container::after { content: attr(data-print-val); font-weight: bold; }
+            .current-table-title, .total-val { color: black !important; font-size: 11px; font-weight: bold; }
+            .ps-timer-box { border: 1px dashed #000 !important; color: black; background: white; padding: 4px; }
+            .ps-time-log { color: #000; border-top: 1px dashed #000; }
+            .checkout-area { border-top: 1px dashed #000; margin-top: 4px; }
+        }
+
+        /* ===== نظام الاشتراك السنوي (License Gate) ===== */
+        #license-gate-overlay {
+            position: fixed; inset: 0; z-index: 5000;
+            background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        #license-gate-overlay.hidden { display: none; }
+        .license-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 20px; width: 100%; max-width: 340px;
+            text-align: center;
+        }
+        .license-card h2 { color: var(--accent-color); margin-top: 0; font-size: 1rem; }
+        .license-card p { font-size: 0.78rem; color: #ccc; }
+        #license-key-input {
+            width: 100%; box-sizing: border-box; padding: 10px; margin: 10px 0;
+            border-radius: 6px; border: 1px solid var(--border-color);
+            background: #1f1f1f; color: #fff; text-align: center;
+            font-size: 0.95rem; letter-spacing: 1px;
+        }
+        .license-btn {
+            width: 100%; padding: 10px; border: none; border-radius: 6px;
+            background: var(--accent-color); color: #000; font-weight: bold;
+            font-size: 0.85rem; cursor: pointer;
+        }
+        .license-btn:disabled { opacity: 0.6; }
+        #license-status-msg { font-size: 0.75rem; margin-top: 8px; min-height: 1em; }
+        #license-status-msg.error { color: var(--danger-color); }
+        #license-status-msg.ok { color: var(--success-color); }
+        #license-expiry-banner {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 4000;
+            background: var(--danger-color); color: #fff; text-align: center;
+            font-size: 0.72rem; padding: 4px; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="license-gate-overlay" class="hidden">
+        <div class="license-card">
+            <h2>🎟️ تفعيل الاشتراك السنوي</h2>
+            <p>هذا الجهاز يحتاج مفتاح اشتراك صالح لتشغيل برنامج كيمز كوفي.</p>
+            <input type="text" id="license-key-input" placeholder="KIMS-XXXX-XXXX-XXXX" autocomplete="off" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+            <button class="license-btn" id="license-verify-btn" onclick="submitLicenseKey()">تفعيل</button>
+            <p id="license-status-msg"></p>
+        </div>
+    </div>
+    <div id="license-expiry-banner"></div>
+
+    <div class="app-header">
+        <div class="logo-area">
+            <div class="app-logo" id="header-logo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+            </div>
+            <div class="brand-name">
+                <h1>كيمز كوفي | GAME'S COFFEE</h1>
+                <p>نظام إدارة المبيعات والصالة v9.0</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div id="network-indicator" class="network-status status-online">متصل</div>
+            <button class="btn-settings" id="btn-printer-settings" onclick="openPrinterSettingsModal()">🖨️ الطابعة</button>
+            <button class="btn-settings" onclick="openSettingsWithPin()">⚙️ الإعدادات</button>
+        </div>
+    </div>
+
+    <div class="tables-bar" id="tables-container"></div>
+
+    <div class="main-content">
+        <div class="menu-section" id="dynamic-menu-container"></div>
+
+        <div class="invoice-section">
+            <div class="invoice-scrollable-area">
+                <h3 class="current-table-title">
+                    <span>📋 حساب <span id="active-table-name">طاولة 1</span></span>
+                    <button class="btn-transfer" onclick="transferActiveTable()">🔄 نقل</button>
+                </h3>
+                
+                <div id="ps-timer-status"></div>
+                <div class="order-list" id="order-list-container"></div>
+            </div>
+
+            <div class="checkout-area">
+                <div class="discount-container" id="disc-box">
+                    <span class="discount-label">💸 الخصم (د.ع):</span>
+                    <input type="number" id="discount-field" class="discount-input" placeholder="0" value="" min="0" step="250" oninput="updateDiscountValue(this.value)">
+                </div>
+                
+                <div class="total-box">
+                    <span>المجموع:</span>
+                    <span class="total-val" id="total-price">0 د.ع</span>
+                </div>
+                
+                <div class="action-btns">
+                    <button class="btn btn-close-bill" onclick="closeAndSaveInvoice()">💵 تثبيت الحساب</button>
+                    <button class="btn btn-print" onclick="printOrderDirect()">🖨️ طباعة</button>
+                </div>
+                
+                <!-- تم نقل زر إرسال التقرير وتحديث تسميته برمجياً هنا -->
+                <button class="btn-send-report" id="btn-send-report-direct" onclick="triggerManualReport()">📤 إرسال التقرير</button>
+
+                <div class="developer-credits">
+                    المطور: <span class="dev-name" id="dev-name-link">محمد انس (@ot_tv)</span> 🚀
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ لوحة إدارة النظام والمنيو والمنجزات</h2>
+                <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                
+                <div class="settings-tabs-bar">
+                    <button class="settings-tab-btn active" onclick="switchSettingsTab('tab-pin', this)">🔐 الرمز السري</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-colors', this)">🎨 ألوان النظام</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-add-item', this)">➕ مادة جديدة</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-items-list', this)">📋 إدارة المواد</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-achievements', this)">🏆 لوحة الإنجازات</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-general', this)">⚙️ إعدادات عامة</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-stats', this)">📊 الأكثر مبيعاً</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-lottery', this)">🎟️ قرعة الفواتير</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-connections', this)">📡 تلغرام وواتساب</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-admins', this)">👥 الأدمنية</button>
+                </div>
+
+                <div id="tab-pin" class="tab-panel active">
+                    <div class="settings-section">
+                        <h3>🔒 تغيير الرمز السري للنظام</h3>
+                        <div class="form-group">
+                            <label>القديم:</label>
+                            <input type="password" id="pin-current" placeholder="أدخل الرمز الحالي">
+                        </div>
+                        <div class="form-group">
+                            <label>الجديد:</label>
+                            <input type="password" id="pin-new" placeholder="الرمز الجديد">
+                        </div>
+                        <div class="form-group">
+                            <label>تأكيد:</label>
+                            <input type="password" id="pin-confirm" placeholder="تأكيد الرمز الجديد">
+                        </div>
+                        <button class="btn-add-item" style="background-color: var(--accent-color); color: #000;" id="btn-change-pin-ui" onclick="changeSystemPin()">تحديث الرمز السري</button>
+                    </div>
+                </div>
+
+                <div id="tab-colors" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>🎨 تخصيص لون البرنامج (Accent Color)</h3>
+                        <p style="font-size: 0.72rem; color: #ccc; margin-top: 0;">اختر أي لون مخصص ليتحول إليه طابع البرنامج وأزراره فوراً بشكل غير محدود:</p>
+                        <div class="form-group">
+                            <label>اختر اللون:</label>
+                            <input type="color" id="app-color-picker" style="height: 38px; cursor: pointer; padding: 2px;" onchange="applyAndSaveCustomColor(this.value)">
+                        </div>
+                        <div style="display: flex; gap: 4px; margin-top: 6px;">
+                            <button class="btn-add-item" style="background-color: #f39c12; color: #000;" onclick="applyAndSaveCustomColor('#f39c12')">برتقالي افتراضي</button>
+                            <button class="btn-add-item" style="background-color: #16a085; color: #fff;" onclick="applyAndSaveCustomColor('#16a085')">فيروزي</button>
+                            <button class="btn-add-item" style="background-color: #d35400; color: #fff;" onclick="applyAndSaveCustomColor('#d35400')">يوسفي مائل للأحمر</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-add-item" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>➕ إضافة مادة جديدة للمنيو</h3>
+                        <div class="form-group">
+                            <label>القسم:</label>
+                            <select id="new-item-category">
+                                <option value="games">🎮 ألعاب وترفيه</option>
+                                <option value="hot">☕ مشروبات حارة</option>
+                                <option value="cold">🍹 مشروبات باردة وعصائر</option>
+                                <option value="food">🍔 أكلات ونراكيل</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم المادة:</label>
+                            <input type="text" id="new-item-name" placeholder="مثال: إسبريسو">
+                        </div>
+                        <div class="form-group">
+                            <label>السعر (د.ع):</label>
+                            <input type="number" id="new-item-price" placeholder="مثال: 1500" step="250">
+                        </div>
+                        <button class="btn-add-item" id="btn-add-product-ui" onclick="addNewProduct()">إضافة المادة للمنيو</button>
+                    </div>
+                </div>
+
+                <div id="tab-items-list" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>📋 إدارة وتعديل المواد الحالية</h3>
+                        <div class="settings-items-list" id="settings-items-list-container">
+                            </div>
+                    </div>
+                </div>
+
+                <div id="tab-achievements" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>🏆 لوحة إنجازات وتحديات كيمز كوفي</h3>
+                        <p style="font-size: 0.72rem; color: #ccc; margin-top:0;">إنجازات الصالة يتم تحديثها تلقائياً مع مبيعاتك المستمرة:</p>
+                        
+                        <div class="achievement-card">
+                            <div class="achievement-title">
+                                <span>🥇 أول مليون مبيعات</span>
+                                <span id="ach-million-badge">❌ لم ينجز</span>
+                            </div>
+                            <div class="achievement-desc">إجمالي مبيعاتك التراكمية في الصندوق لتصل إلى 1,000,000 د.ع.</div>
+                            <div class="achievement-progress-bar">
+                                <div class="achievement-progress" id="ach-million-progress"></div>
+                            </div>
+                            <div class="achievement-status-txt" id="ach-million-text">0 / 1,000,000 د.ع</div>
+                        </div>
+
+                        <!-- تم استبدال الشاي برمجياً هنا لحساب عدد قناني الماء المباعة بدقة -->
+                        <div class="achievement-card" style="background-color: #27ae6033; border-color: #27ae60;">
+                            <div class="achievement-title">
+                                <span>💧 ماء الكافيه التراكمي</span>
+                                <span id="ach-water-badge">❌ لم ينجز</span>
+                            </div>
+                            <div class="achievement-desc">الهدف: بيع 100 قنينة ماء للزبائن لفتح الإنجاز الفضي!</div>
+                            <div class="achievement-progress-bar">
+                                <div class="achievement-progress" style="background-color: #3498db;" id="ach-water-progress"></div>
+                            </div>
+                            <div class="achievement-status-txt" id="ach-water-text">0 / 100 قنينة</div>
+                        </div>
+
+                        <div class="achievement-card" style="background-color: #2980b933; border-color: #2980b9;">
+                            <div class="achievement-title">
+                                <span>🎮 جنون ساعات الـ PS</span>
+                                <span id="ach-ps-hours-badge">🔒 قيد التجميع</span>
+                            </div>
+                            <div class="achievement-desc">مجموع وقت لعب الأجهزة الكلي المحتسب بالصالة. الهدف: 50 ساعة.</div>
+                            <div class="achievement-progress-bar">
+                                <div class="achievement-progress" style="background-color: #e67e22;" id="ach-ps-hours-progress"></div>
+                            </div>
+                            <div class="achievement-status-txt" id="ach-ps-hours-text">0 / 50 ساعة</div>
+                        </div>
+
+                        <div class="achievement-card" style="background-color: #8e44ad33; border-color: #8e44ad;">
+                            <div class="achievement-title">
+                                <span>🔥 لهيب الفواتير اليومي</span>
+                                <span id="ach-bills-badge">⚡ نشط</span>
+                            </div>
+                            <div class="achievement-desc">إجمالي عدد الطاولات والفواتير التي تم إغلاقها وتصفيتها بنجاح هذا اليوم.</div>
+                            <div class="achievement-status-txt" id="ach-bills-text" style="text-align: right; font-size: 0.75rem; font-weight:bold; color: #fff;">0 فاتورة مغلقة اليوم</div>
+                        </div>
+
+                        <button class="btn-add-item" style="background-color: #8e44ad; color: #fff; margin-top: 10px;" onclick="sendAchievementsReportAndReset()">📤 إرسال تقرير الإنجازات وتصفيرها</button>
+
+                    </div>
+                </div>
+
+                <div id="tab-general" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>🎮 سعر ساعة الـ PS4</h3>
+                        <div class="form-group">
+                            <label>السعر (د.ع/س):</label>
+                            <input type="number" id="setting-ps-price" step="250">
+                        </div>
+                        <button class="btn-add-item" onclick="updatePs4Price()">تحديث سعر الساعة</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>🪑 عدد الطاولات</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">لا يمكن تقليل العدد إذا كانت الطاولات الزائدة تحتوي على حسابات مفتوحة أو تشغيل PS4 نشط.</p>
+                        <div class="form-group">
+                            <label>العدد:</label>
+                            <input type="number" id="setting-total-tables" min="1" max="60" step="1">
+                        </div>
+                        <button class="btn-add-item" onclick="updateTotalTables()">تحديث عدد الطاولات</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>📤 التقارير الدورية اليدوية</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">تُرسل هذه التقارير تلقائياً عند انتهاء كل أسبوع/شهر، وتقدر ترسلها وتصفرها يدوياً بأي وقت:</p>
+                        <button class="btn-add-item" style="background-color: #2980b9; margin-bottom: 6px;" onclick="triggerManualWeeklyReport()">📅 إرسال التقرير الأسبوعي وتصفيره</button>
+                        <button class="btn-add-item" style="background-color: #8e44ad;" onclick="triggerManualMonthlyReport()">🗓️ إرسال التقرير الشهري وتصفيره</button>
+                    </div>
+                </div>
+
+                <div id="tab-stats" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>📊 المنتجات الأكثر مبيعاً</h3>
+                        <div style="display: flex; gap: 4px; margin-bottom: 10px;">
+                            <button class="settings-tab-btn stats-period-btn active" onclick="switchStatsPeriod('daily', this)" style="flex:1;">اليوم</button>
+                            <button class="settings-tab-btn stats-period-btn" onclick="switchStatsPeriod('weekly', this)" style="flex:1;">الأسبوع</button>
+                            <button class="settings-tab-btn stats-period-btn" onclick="switchStatsPeriod('monthly', this)" style="flex:1;">الشهر</button>
+                        </div>
+                        <div class="settings-items-list" id="product-stats-container" style="max-height: 320px;">
+                        </div>
+                        <button class="btn-add-item" style="background-color: #8e44ad; color: #fff; margin-top: 10px;" onclick="sendMostSoldReportAndReset()">📤 إرسال تقرير الأكثر مبيعاً وتصفيره</button>
+                    </div>
+                </div>
+
+                <div id="tab-lottery" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>🎟️ قرعة الفواتير (10 آلاف دينار فأكثر)</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">كل فاتورة تثبت بمبلغ 10,000 د.ع أو أكثر تاخذ رقم تلقائي من 1 إلى 100. لما توصل الدورة 100 فاتورة، النظام يسوي قرعة عشوائية ويختار فاتورة وحدة فايزة بخصم 10,000 د.ع، وبعدها يبلش عد جديد من الصفر تلقائياً وبشكل دائم.</p>
+                        
+                        <div class="form-group">
+                            <label>الحالة:</label>
+                            <span id="lottery-progress-text" style="font-weight:bold; color: var(--accent-color);">الدورة رقم 1 — 0 / 100 فاتورة</span>
+                        </div>
+
+                        <p id="lottery-last-winner" style="font-size: 0.72rem; color: var(--success-color); font-weight:bold; margin: 8px 0;">ما صارت أي قرعة لحد الآن.</p>
+
+                        <button class="btn-add-item" style="background-color: #c0392b;" onclick="manualRunLotteryDraw()">🎲 إجراء القرعة الآن يدوياً</button>
+
+                        <h3 style="margin-top: 14px;">📋 فواتير الدورة الحالية</h3>
+                        <div class="settings-items-list" id="lottery-invoices-list" style="max-height: 260px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-connections" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>📡 ربط تلغرام</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">عدّل هون رمز البوت (Bot Token) وآيدي الشات (Chat ID) الخاصين بيك بأي وقت بدون ما تحتاج تعديل الكود.</p>
+                        <div class="form-group">
+                            <label>Bot Token:</label>
+                            <input type="text" id="setting-telegram-token" placeholder="رمز البوت من BotFather">
+                        </div>
+                        <div class="form-group">
+                            <label>Chat ID:</label>
+                            <input type="text" id="setting-telegram-chatid" placeholder="آيدي الشات أو القروب">
+                        </div>
+                        <button class="btn-add-item" onclick="saveTelegramSettings()">💾 حفظ إعدادات تلغرام</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>💬 ربط واتساب (اختياري)</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">يعتمد على خدمة CallMeBot المجانية غير الرسمية. أول مرة بس: أرسل من رقم الواتساب المطلوب استلام الرسائل عليه كلمة "I allow callmebot to send me messages" لرقم +34 644 59 71 07، وبعدها بيوصلك API Key على نفس رقمك.</p>
+                        <div class="form-group">
+                            <label>رقم الواتساب:</label>
+                            <input type="text" id="setting-whatsapp-number" placeholder="مثال: 9647xxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label>API Key:</label>
+                            <input type="text" id="setting-whatsapp-apikey" placeholder="اللي وصلك من CallMeBot">
+                        </div>
+                        <button class="btn-add-item" style="background-color: #25D366; color: #000;" onclick="saveWhatsappSettings()">💾 حفظ إعدادات واتساب</button>
+                    </div>
+
+                    <div class="settings-section">
+                        <button class="btn-add-item" style="background-color: #2980b9;" onclick="sendTestConnectionMessage()">📨 إرسال رسالة تجريبية للتأكد</button>
+                    </div>
+                </div>
+
+                <div id="tab-admins" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>👥 إدارة الأدمنية</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">أضف أدمن جديد باسمه ورمزه السري الخاص فيه. أي أدمن مسجل هون يقدر يفتح الإعدادات ويسوي أي تعديل بالنظام، تماماً متل الرمز السري الرئيسي (تبويب 🔐). الرمز الرئيسي يضل شغال دايماً ومايمديك تحذفه.</p>
+                        
+                        <div class="form-group">
+                            <label>اسم الأدمن:</label>
+                            <input type="text" id="new-admin-name" placeholder="مثال: أحمد">
+                        </div>
+                        <div class="form-group">
+                            <label>الرمز السري:</label>
+                            <input type="password" id="new-admin-pin" placeholder="4 أرقام أو أكثر">
+                        </div>
+                        <button class="btn-add-item" onclick="addNewAdmin()">➕ إضافة أدمن جديد</button>
+
+                        <h3 style="margin-top: 14px;">📋 قائمة الأدمنية الحاليين</h3>
+                        <div class="settings-items-list" id="admins-list-container">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="printer-settings-modal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2>🖨️ إعدادات الطباعة الحرارية</h2>
+                <span class="close-modal" onclick="closePrinterSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">اقرن الطابعة الحرارية مرة وحدة بس، وبعدها زر "🖨️ طباعة" رح يطبع الفاتورة مباشرة بدون أي نافذة أو برنامج وسيط. تأكد إن الطابعة مفعّلة ومقرونة (Paired) من إعدادات بلوتوث الموبايل أولاً.</p>
+
+                    <div class="form-group">
+                        <label>حالة الطابعة:</label>
+                        <span id="printer-status-text" style="font-weight:bold; color: var(--danger-color);">❌ غير مقترنة بعد</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>طريقة الطباعة:</label>
+                        <select id="setting-printer-mode" onchange="updatePrinterModeSetting(this.value)">
+                            <option value="auto">تلقائي (طباعة مباشرة، ولو ما نجحت تفتح نافذة الطباعة العادية)</option>
+                            <option value="system">نافذة الطباعة العادية دائماً (موصى به مع تطبيق RawBT على أندرويد)</option>
+                        </select>
+                        <p style="font-size: 0.66rem; color: #ccc; margin: 4px 0 0 0;">
+                            إذا نصبت التطبيق من گوگل بلاي وصار عندك طابعات تتأخر أو ما تطبع مباشرة على بعض الأجهزة، ثبّت تطبيق مجاني اسمه <b>RawBT</b> من گوگل بلاي على نفس التابلت، وخلي هذا الخيار على "نافذة الطباعة العادية" — رح يطبع عبره بثبات أكثر من الطباعة المباشرة.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>عرض الورق:</label>
+                        <select id="setting-printer-paper" onchange="updatePrinterPaperSetting(this.value)">
+                            <option value="58mm">58 ملم (رول صغير)</option>
+                            <option value="80mm">80 ملم (رول كبير)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>سرعة النقل:</label>
+                        <select id="setting-printer-baud" onchange="updatePrinterBaudSetting(this.value)">
+                            <option value="9600">9600 (الافتراضية لأغلب الطابعات)</option>
+                            <option value="19200">19200</option>
+                            <option value="38400">38400</option>
+                            <option value="115200">115200</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>حجم خط الطباعة:</label>
+                        <select id="setting-printer-font" onchange="updatePrinterFontSetting(this.value)">
+                            <option value="small">صغير (يفيد لو الفاتورة طويلة)</option>
+                            <option value="medium">متوسط (الافتراضي)</option>
+                            <option value="large">كبير (أوضح للقراءة)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-add-item" style="background-color: #2980b9;" onclick="connectPrinterManually()">🔗 إقران / تغيير الطابعة</button>
+                    <p id="printer-compat-warning" style="font-size: 0.68rem; color: var(--danger-color); margin-top: 8px; margin-bottom: 0; display:none;">⚠️ متصفح Chrome عندك قديم وما يدعم الطباعة المباشرة. حدّثه من متجر Google Play (يحتاج Chrome 138 أو أحدث) وحاول مرة ثانية.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ نظام الاشتراك السنوي (License Gate) ============
+        // غيّر هذا الرابط لرابط سيرفر التفعيل بعد ما تنشره (شوف مجلد kims-license-server)
+        const LICENSE_SERVER_URL = "https://YOUR-LICENSE-SERVER-URL.onrender.com";
+        const LICENSE_KEY_STORAGE = 'kims_license_key_v1';
+        const DEVICE_ID_STORAGE = 'kims_device_id_v1';
+        const LICENSE_EXPIRES_STORAGE = 'kims_license_expires_at_v1';
+        const LICENSE_CUSTOMER_STORAGE = 'kims_license_customer_v1';
+        const LICENSE_MAX_SEEN_TIME_STORAGE = 'kims_license_max_seen_time_v1';
+        const CLOCK_TOLERANCE_MS = 2 * 60 * 1000; // هامش دقيقتين لأي فرق ساعة طبيعي (منطقة زمنية، توقيت صيفي..)
+
+        function getOrCreateDeviceId() {
+            let id = localStorage.getItem(DEVICE_ID_STORAGE);
+            if (!id) {
+                id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                localStorage.setItem(DEVICE_ID_STORAGE, id);
+            }
+            return id;
+        }
+
+        async function verifyLicenseWithServer(key, deviceId) {
+            const res = await fetch(`${LICENSE_SERVER_URL}/api/license/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, deviceId })
+            });
+            return res.json();
+        }
+
+        function showLicenseGate(msg, isError) {
+            document.getElementById('license-gate-overlay').classList.remove('hidden');
+            const msgEl = document.getElementById('license-status-msg');
+            if (msg) { msgEl.textContent = msg; msgEl.className = isError ? 'error' : ''; }
+        }
+        function hideLicenseGate() {
+            document.getElementById('license-gate-overlay').classList.add('hidden');
+        }
+
+        function updateExpiryBanner(expiresAt) {
+            const banner = document.getElementById('license-expiry-banner');
+            const daysLeft = Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+            if (daysLeft <= 14 && daysLeft > 0) {
+                banner.style.display = 'block';
+                banner.textContent = `⚠️ اشتراكك ينتهي خلال ${daysLeft} يوم — تواصل لتجديد الاشتراك السنوي.`;
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function lockAppWithReason(reason) {
+            const messages = {
+                not_found: 'مفتاح الاشتراك غير صحيح.',
+                revoked: 'تم إلغاء هذا الاشتراك. الرجاء التواصل مع الدعم.',
+                expired: 'انتهت مدة الاشتراك السنوي. الرجاء التواصل لتجديد الاشتراك.',
+                device_mismatch: 'هذا المفتاح مستخدم على جهاز آخر. تواصل مع الدعم لفك الربط.',
+                clock_tampered: 'تم رصد تغيير بتاريخ ووقت الجهاز. اضبط التاريخ والوقت الصحيح ثم أعد فتح البرنامج.'
+            };
+            showLicenseGate(messages[reason] || 'تعذر تفعيل الاشتراك.', true);
+        }
+
+        // يمنع خداع النظام بإرجاع ساعة/تاريخ الجهاز للخلف للتحايل على انتهاء الاشتراك.
+        // يحفظ أعلى وقت شافه الجهاز، فإذا رجع الوقت الحالي للخلف بشكل واضح نعتبرها محاولة تلاعب.
+        function isClockTampered() {
+            const now = Date.now();
+            const maxSeen = parseInt(localStorage.getItem(LICENSE_MAX_SEEN_TIME_STORAGE)) || 0;
+            if (maxSeen > 0 && now < (maxSeen - CLOCK_TOLERANCE_MS)) {
+                return true;
+            }
+            localStorage.setItem(LICENSE_MAX_SEEN_TIME_STORAGE, String(Math.max(now, maxSeen)));
+            return false;
+        }
+
+        // يشتغل بكل فتح للبرنامج، وبالخلفية كل فترة، وكل ما يرجع النت.
+        // الفحص الأساسي محلي بالكامل (يقفل حتى بدون نت إذا خلص الاشتراك)،
+        // والاتصال بالسيرفر يصير بالخلفية بصمت فقط لتحديث تاريخ الانتهاء تلقائياً
+        // (إذا جدد صاحب المحل الاشتراك) أو لاكتشاف إلغاء مبكر - بدون ما يطلب من المستخدم إدخال المفتاح مرة ثانية.
+        async function checkLicenseStatus() {
+            const key = localStorage.getItem(LICENSE_KEY_STORAGE);
+            if (!key) { showLicenseGate('الرجاء إدخال مفتاح الاشتراك لتفعيل البرنامج (مرة واحدة فقط).'); return; }
+
+            if (isClockTampered()) { lockAppWithReason('clock_tampered'); return; }
+
+            const cachedExpiresAt = parseInt(localStorage.getItem(LICENSE_EXPIRES_STORAGE)) || 0;
+            const now = Date.now();
+
+            // القفل الأساسي: قرار محلي بحت، يشتغل حتى لو الجهاز مقطوع عن النت تماماً.
+            if (cachedExpiresAt > 0 && now > cachedExpiresAt) {
+                lockAppWithReason('expired');
+            } else if (cachedExpiresAt > 0) {
+                hideLicenseGate();
+                updateExpiryBanner(cachedExpiresAt);
+            }
+            // ملاحظة: إذا ما عندنا cachedExpiresAt أبداً (حالة نادرة، مثلاً أول تفعيل ما اكتمل)
+            // نترك القرار للتحقق مع السيرفر أدناه.
+
+            // مزامنة صامتة بالخلفية (بدون ما تقفل الشغل الحالي أو تطلب إدخال المفتاح):
+            // تحدّث تاريخ الانتهاء تلقائياً لو صاحب المحل جدد، أو تقفل فوراً لو تم إلغاء الاشتراك.
+            if (navigator.onLine) {
+                try {
+                    const deviceId = getOrCreateDeviceId();
+                    const result = await verifyLicenseWithServer(key, deviceId);
+                    if (result.valid) {
+                        localStorage.setItem(LICENSE_EXPIRES_STORAGE, result.expiresAt);
+                        if (result.customerName) localStorage.setItem(LICENSE_CUSTOMER_STORAGE, result.customerName);
+                        if (Date.now() <= result.expiresAt) {
+                            hideLicenseGate();
+                            updateExpiryBanner(result.expiresAt);
+                        }
+                    } else if (result.reason === 'revoked' || result.reason === 'not_found' || result.reason === 'device_mismatch') {
+                        // إلغاء أو خطأ بالمفتاح نكتشفه فقط أونلاين - نقفل فوراً بمجرد ما نعرف
+                        lockAppWithReason(result.reason);
+                    }
+                    // ملاحظة: result.reason === 'expired' من السيرفر لا يضيف شي جديد، القرار المحلي أعلاه يكفي.
+                } catch (err) {
+                    console.warn('تعذرت المزامنة مع سيرفر التفعيل (يبقى التطبيق يعتمد على آخر بيانات محفوظة محلياً):', err);
+                }
+            } else if (!cachedExpiresAt) {
+                showLicenseGate('يحتاج البرنامج اتصال بالإنترنت للتفعيل أول مرة.', true);
+            }
+        }
+
+        async function submitLicenseKey() {
+            const input = document.getElementById('license-key-input');
+            const key = input.value.trim().toUpperCase();
+            const msgEl = document.getElementById('license-status-msg');
+            const btn = document.getElementById('license-verify-btn');
+            if (!key) { msgEl.textContent = 'اكتب مفتاح الاشتراك.'; msgEl.className = 'error'; return; }
+            if (!navigator.onLine) { msgEl.textContent = 'تحتاج اتصال بالإنترنت للتفعيل أول مرة فقط.'; msgEl.className = 'error'; return; }
+
+            btn.disabled = true; msgEl.textContent = 'جاري التحقق...'; msgEl.className = '';
+            try {
+                const deviceId = getOrCreateDeviceId();
+                const result = await verifyLicenseWithServer(key, deviceId);
+                if (result.valid) {
+                    localStorage.setItem(LICENSE_KEY_STORAGE, key);
+                    localStorage.setItem(LICENSE_EXPIRES_STORAGE, result.expiresAt);
+                    if (result.customerName) localStorage.setItem(LICENSE_CUSTOMER_STORAGE, result.customerName);
+                    localStorage.setItem(LICENSE_MAX_SEEN_TIME_STORAGE, String(Date.now()));
+                    msgEl.textContent = 'تم التفعيل بنجاح ✅ (ما رح يطلب المفتاح بعدها)';
+                    msgEl.className = 'ok';
+                    setTimeout(() => { hideLicenseGate(); updateExpiryBanner(result.expiresAt); }, 600);
+                } else {
+                    lockAppWithReason(result.reason);
+                }
+            } catch (err) {
+                msgEl.textContent = 'تعذر الاتصال بسيرفر التفعيل. تأكد من رابط السيرفر وحاول مرة ثانية.';
+                msgEl.className = 'error';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('online', checkLicenseStatus);
+        setInterval(checkLicenseStatus, 60 * 60 * 1000); // فحص محلي + مزامنة صامتة كل ساعة
+        // ============ نهاية نظام الاشتراك السنوي ============
+
+        // إعدادات تلغرام وواتساب ديناميكية (قابلة للتعديل من تبويب الإعدادات "📡 تلغرام وواتساب" بدون لمس الكود)
+        const DEFAULT_TELEGRAM_TOKEN = "8777588307:AAG0Oy2IcQ-wWzEGZFBNlUK5WFCQT_q4q3s";
+        const DEFAULT_TELEGRAM_CHAT_ID = "1237009798";
+
+        function getTelegramToken() {
+            return localStorage.getItem('cafe_telegram_token_v9') || DEFAULT_TELEGRAM_TOKEN;
+        }
+        function getTelegramChatId() {
+            return localStorage.getItem('cafe_telegram_chatid_v9') || DEFAULT_TELEGRAM_CHAT_ID;
+        }
+        function getWhatsappNumber() {
+            return localStorage.getItem('cafe_whatsapp_number_v9') || "";
+        }
+        function getWhatsappApiKey() {
+            return localStorage.getItem('cafe_whatsapp_apikey_v9') || "";
+        }
+
+        function saveTelegramSettings() {
+            const token = document.getElementById('setting-telegram-token').value.trim();
+            const chatId = document.getElementById('setting-telegram-chatid').value.trim();
+            if (!token || !chatId) {
+                alert('عبّي رمز البوت وآيدي الشات، الاثنين مطلوبين!');
+                return;
+            }
+            localStorage.setItem('cafe_telegram_token_v9', token);
+            localStorage.setItem('cafe_telegram_chatid_v9', chatId);
+            alert('تم حفظ إعدادات تلغرام بنجاح! ✅');
+        }
+
+        function saveWhatsappSettings() {
+            const number = document.getElementById('setting-whatsapp-number').value.trim();
+            const apikey = document.getElementById('setting-whatsapp-apikey').value.trim();
+            localStorage.setItem('cafe_whatsapp_number_v9', number);
+            localStorage.setItem('cafe_whatsapp_apikey_v9', apikey);
+            alert('تم حفظ إعدادات واتساب بنجاح! ✅');
+        }
+
+        function sendTestConnectionMessage() {
+            const msg = '✅ رسالة تجريبية من نظام كيمز كوفي - الربط شغال تمام!';
+            pendingInvoices.push(msg);
+            saveToStorage();
+            processPendingInvoices();
+            alert('تم إرسال رسالة تجريبية، تحقق من تلغرام و/أو واتساب حسب اللي فعّلته.');
+        }
+
+        // إرسال نسخة من الرسالة لواتساب عبر خدمة CallMeBot المجانية (فقط إذا كان الرقم والمفتاح معبيين بالإعدادات)
+        function sendToWhatsAppIfConfigured(text) {
+            const number = getWhatsappNumber();
+            const apikey = getWhatsappApiKey();
+            if (!number || !apikey) return;
+            const plainText = text.replace(/\*/g, '');
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(number)}&text=${encodeURIComponent(plainText)}&apikey=${encodeURIComponent(apikey)}`;
+            fetch(url).catch(err => console.error('فشل إرسال نسخة واتساب:', err));
+        }
+
+        function loadConnectionSettingsUI() {
+            const tokenEl = document.getElementById('setting-telegram-token');
+            const chatIdEl = document.getElementById('setting-telegram-chatid');
+            const waNumberEl = document.getElementById('setting-whatsapp-number');
+            const waKeyEl = document.getElementById('setting-whatsapp-apikey');
+            if (tokenEl) tokenEl.value = getTelegramToken();
+            if (chatIdEl) chatIdEl.value = getTelegramChatId();
+            if (waNumberEl) waNumberEl.value = getWhatsappNumber();
+            if (waKeyEl) waKeyEl.value = getWhatsappApiKey();
+        }
+
+        // ============ إدارة الأدمنية ============
+        function renderAdminsList() {
+            const container = document.getElementById('admins-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (adminsList.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; font-size:0.75rem; padding:10px;">ما في أدمنية إضافيين بعد. الرمز الرئيسي ضلّ فعّال دايماً.</p>';
+                return;
+            }
+
+            adminsList.forEach(admin => {
+                const row = document.createElement('div');
+                row.className = 'settings-item-row';
+                row.innerHTML = `
+                    <div class="row-info">
+                        <strong>${admin.name}</strong>
+                        <span class="row-cat">الرمز: ${'•'.repeat(admin.pin.length)}</span>
+                    </div>
+                    <div class="row-actions">
+                        <button class="btn-row-delete" onclick="deleteAdmin('${admin.id}')">🗑️ حذف</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addNewAdmin() {
+            const name = document.getElementById('new-admin-name').value.trim();
+            const pin = document.getElementById('new-admin-pin').value.trim();
+
+            if (!name || !pin) {
+                alert('عبّي اسم الأدمن والرمز السري!');
+                return;
+            }
+            if (pin.length < 4) {
+                alert('من أجل الأمان، الرمز لازم يكون 4 خانات أو أكثر!');
+                return;
+            }
+            if (isValidAdminPin(pin)) {
+                alert('هذا الرمز مستخدم مسبقاً (من أدمن ثاني أو الرمز الرئيسي)! اختر رمز مختلف.');
+                return;
+            }
+
+            adminsList.push({ id: String(new Date().getTime()), name, pin });
+            saveToStorage();
+
+            document.getElementById('new-admin-name').value = '';
+            document.getElementById('new-admin-pin').value = '';
+
+            renderAdminsList();
+            alert(`تمت إضافة الأدمن "${name}" بنجاح! ✅`);
+        }
+
+        function deleteAdmin(id) {
+            const admin = adminsList.find(a => a.id === id);
+            if (!admin) return;
+
+            if (confirm(`هل تريد حذف الأدمن "${admin.name}"؟`)) {
+                adminsList = adminsList.filter(a => a.id !== id);
+                saveToStorage();
+                renderAdminsList();
+            }
+        }
+        // ============ نهاية إدارة الأدمنية ============
+
+        let totalTables = parseInt(localStorage.getItem('cafe_total_tables_v9')) || 15;
+        let activeTable = 1;
+        let psPricePerHour = parseInt(localStorage.getItem('cafe_ps_price_v9')) || 2000;
+        
+        let audioCtx = null;
+        let alarmIntervalId = null;
+
+        // المنيو الافتراضي الأولي
+        const defaultProducts = [
+            { id: 16, name: 'كيم بليارد', price: 500, category: 'games' },
+            { id: 20, name: 'دومنة', price: 1000, category: 'games' },
+            { id: 21, name: 'ورق لعب', price: 1000, category: 'games' },
+            { id: 22, name: 'طاولي', price: 2000, category: 'games' },
+            { id: 23, name: 'ميز', price: 2000, category: 'games' },
+            { id: 24, name: 'يده', price: 1000, category: 'games' },
+            { id: 2, name: 'شاي', price: 500, category: 'hot' },
+            { id: 3, name: 'نسكافي', price: 500, category: 'hot' },
+            { id: 4, name: 'حليب', price: 500, category: 'hot' },
+            { id: 5, name: 'كبجينو', price: 1000, category: 'hot' },
+            { id: 6, name: 'قهوة', price: 1000, category: 'hot' },
+            { id: 7, name: 'هوت جوكليت', price: 1000, category: 'hot' },
+            { id: 1, name: 'ماء', price: 250, category: 'cold' },
+            { id: 11, name: 'مشروبات غازيه', price: 500, category: 'cold' },
+            { id: 12, name: 'تايكر', price: 1000, category: 'cold' },
+            { id: 8, name: 'عصير موز', price: 1500, category: 'cold' },
+            { id: 9, name: 'عصير ليمون', price: 2000, category: 'cold' },
+            { id: 10, name: 'مكسيكي', price: 2000, category: 'cold' },
+            { id: 17, name: 'كيك', price: 250, category: 'food' },
+            { id: 18, name: 'جبس', price: 250, category: 'food' },
+            { id: 19, name: 'موطة', price: 250, category: 'food' },
+            { id: 14, name: 'فنكر', price: 1000, category: 'food' },
+            { id: 15, name: 'بركر', price: 1000, category: 'food' },
+            { id: 13, name: 'نركيلة', price: 3500, category: 'food' },
+            { id: 25, name: 'نركيله vip', price: 4000, category: 'food' }
+        ];
+
+        // الذاكرة التخزينية للمنجزات
+        const defaultAchievements = {
+            cumulativeSales: 0,     // المبيعات التراكمية الإجمالية
+            waterBottlesSold: 0,    // قناني الماء المباعة التراكمية (بديل الشاي المحدث)
+            psActiveMinutes: 0,     // مجموع تشغيل الـ PS بالدقائق
+            todayClosedBillsCount: 0 // عدد فواتير هذا اليوم المغلقة
+        };
+
+        let productsList = JSON.parse(localStorage.getItem('cafe_products_list_v9')) || defaultProducts;
+        let systemPin = localStorage.getItem('cafe_system_pin_v9') || "66666";
+        let adminsList = JSON.parse(localStorage.getItem('cafe_admins_list_v9')) || [];
+
+        // يتحقق إذا الرمز المدخل يخص الرمز الرئيسي أو أي أدمن مسجل بالنظام
+        function isValidAdminPin(pin) {
+            if (pin === systemPin) return true;
+            return adminsList.some(a => a.pin === pin);
+        }
+        let customThemeColor = localStorage.getItem('cafe_custom_color_v9') || "#f39c12";
+        let achievements = JSON.parse(localStorage.getItem('cafe_achievements_v9')) || defaultAchievements;
+
+        // ترحيل البيانات القديمة وضمان عمل عداد المياه التراكمي بدون أي مشاكل
+        if (achievements.teaCupsSold !== undefined) {
+            achievements.waterBottlesSold = achievements.teaCupsSold;
+            delete achievements.teaCupsSold;
+        }
+        if (achievements.waterBottlesSold === undefined) {
+            achievements.waterBottlesSold = 0;
+        }
+
+        let tablesData = JSON.parse(localStorage.getItem('cafe_pos_v9')) || {};
+        for(let i = 1; i <= totalTables; i++) {
+            if(!tablesData[i]) {
+                tablesData[i] = { 
+                    items: [], 
+                    psActive: false, 
+                    psStartTime: null, 
+                    psElapsedCost: 0, 
+                    psTimeString: '00:00:00', 
+                    startClock: '', 
+                    stopClock: '', 
+                    discount: 0,
+                    psIsLimit: false,        
+                    psLimitMinutes: 0,       
+                    psTimeRemainingString: '00:00:00',
+                    alarmTriggered: false
+                };
+            }
+            if (tablesData[i].alarmTriggered === undefined) {
+                tablesData[i].alarmTriggered = false;
+            }
+        }
+
+        let dailyTotalSales = parseInt(localStorage.getItem('daily_sales_hidden_v9')) || 0;
+        let dailyTotalDiscounts = parseInt(localStorage.getItem('daily_discounts_hidden_v9')) || 0;
+        let dailyGameSales = parseInt(localStorage.getItem('daily_games_sales_v9')) || 0; 
+        let pendingInvoices = JSON.parse(localStorage.getItem('pending_invoices_queue_v9')) || [];
+
+        let weeklyTotalSales = parseInt(localStorage.getItem('weekly_sales_hidden_v9')) || 0;
+        let weeklyTotalDiscounts = parseInt(localStorage.getItem('weekly_discounts_hidden_v9')) || 0;
+        let weeklyGameSales = parseInt(localStorage.getItem('weekly_games_sales_v9')) || 0;
+
+        let monthlyTotalSales = parseInt(localStorage.getItem('monthly_sales_hidden_v9')) || 0;
+        let monthlyTotalDiscounts = parseInt(localStorage.getItem('monthly_discounts_hidden_v9')) || 0;
+        let monthlyGameSales = parseInt(localStorage.getItem('monthly_games_sales_v9')) || 0;
+
+        let productSalesStats = JSON.parse(localStorage.getItem('cafe_product_stats_v9')) || { daily: {}, weekly: {}, monthly: {} };
+        if(!productSalesStats.daily) productSalesStats.daily = {};
+        if(!productSalesStats.weekly) productSalesStats.weekly = {};
+        if(!productSalesStats.monthly) productSalesStats.monthly = {};
+
+        let currentStatsPeriod = 'daily';
+
+        // نظام ترقيم الفواتير والقرعة الدورية (كل فاتورة 10 آلاف دينار فأكثر تاخذ رقم من 1 إلى 100)
+        let invoiceLottery = JSON.parse(localStorage.getItem('cafe_invoice_lottery_v9')) || {
+            currentNumber: 0,
+            cycleId: 1,
+            invoices: [],
+            lastWinner: null
+        };
+        if (!Array.isArray(invoiceLottery.invoices)) invoiceLottery.invoices = [];
+
+        function applyThemeColor(color) {
+            document.documentElement.style.setProperty('--accent-color', color);
+            const headerLogo = document.getElementById('header-logo');
+            if(headerLogo) headerLogo.style.color = color;
+            const devNameLink = document.getElementById('dev-name-link');
+            if(devNameLink) devNameLink.style.color = color;
+            
+            const btnChangePinUi = document.getElementById('btn-change-pin-ui');
+            if(btnChangePinUi) btnChangePinUi.style.backgroundColor = color;
+            const btnAddProductUi = document.getElementById('btn-add-product-ui');
+            if(btnAddProductUi) btnAddProductUi.style.backgroundColor = color;
+
+            const printBtn = document.querySelector('.btn-print');
+            if(printBtn) printBtn.style.backgroundColor = color;
+
+            const btnSendReportDirect = document.getElementById('btn-send-report-direct');
+            if(btnSendReportDirect) {
+                // إبقاء لون زر الإرسال المباشر بنفسجي مميز لسرعة الرؤية، مع تخصيص الحدود بلمسة من لون السمة
+                btnSendReportDirect.style.borderColor = color;
+            }
+
+            renderTablesBar();
+        }
+
+        function applyAndSaveCustomColor(color) {
+            customThemeColor = color;
+            localStorage.setItem('cafe_custom_color_v9', color);
+            applyThemeColor(color);
+            document.getElementById('app-color-picker').value = color;
+        }
+
+        function getBusinessDate() {
+            const now = new Date();
+            if (now.getHours() < 2) {
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                return yesterday.toLocaleDateString('en-US'); 
+            }
+            return now.toLocaleDateString('en-US');
+        }
+
+        function roundToNearest250(amount) {
+            return Math.round(amount / 250) * 250;
+        }
+
+        function checkAndResetDailySales() {
+            const currentBusinessDate = getBusinessDate();
+            const lastResetDate = localStorage.getItem('last_sales_reset_date_v9');
+            
+            if (lastResetDate && lastResetDate !== currentBusinessDate) {
+                sendEndDayReport(lastResetDate, dailyTotalSales, dailyTotalDiscounts, dailyGameSales);
+                
+                dailyTotalSales = 0;
+                dailyTotalDiscounts = 0;
+                dailyGameSales = 0;
+                achievements.todayClosedBillsCount = 0; 
+
+                localStorage.setItem('daily_sales_hidden_v9', 0);
+                localStorage.setItem('daily_discounts_hidden_v9', 0);
+                localStorage.setItem('daily_games_sales_v9', 0);
+            }
+            localStorage.setItem('last_sales_reset_date_v9', currentBusinessDate);
+        }
+
+        function sendEndDayReport(reportDate, totalSales, totalDiscounts, gameSales) {
+            let formattedDate = new Date(reportDate).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            let reportMsg = `📊 *تقرير إغلاق يوم العمل المنتهي*\n`;
+            reportMsg += `📅 ليوم: ${formattedDate}\n`;
+            reportMsg += `-------------------------\n`;
+            reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${totalSales.toLocaleString()} د.ع*\n`;
+            reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
+            reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
+            reportMsg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            reportMsg += `-------------------------\n`;
+            reportMsg += `✨ تم بدء يوم عمل جديد وتصفير العدادات تلقائياً بنجاح.`;
+
+            pendingInvoices.push(reportMsg);
+            saveToStorage();
+            processPendingInvoices();
+        }
+
+        function getWeekIdentifier(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getUTCFullYear()}-W${weekNo}`;
+        }
+
+        function getMonthIdentifier(date) {
+            return `${date.getFullYear()}-${date.getMonth()}`;
+        }
+
+        function checkAndResetWeeklySales() {
+            const currentWeek = getWeekIdentifier(new Date());
+            const lastWeek = localStorage.getItem('last_week_reset_v9');
+
+            if (lastWeek && lastWeek !== currentWeek) {
+                sendWeeklyReport(weeklyTotalSales, weeklyTotalDiscounts, weeklyGameSales);
+
+                weeklyTotalSales = 0;
+                weeklyTotalDiscounts = 0;
+                weeklyGameSales = 0;
+                productSalesStats.weekly = {};
+
+                localStorage.setItem('weekly_sales_hidden_v9', 0);
+                localStorage.setItem('weekly_discounts_hidden_v9', 0);
+                localStorage.setItem('weekly_games_sales_v9', 0);
+                saveToStorage();
+            }
+            localStorage.setItem('last_week_reset_v9', currentWeek);
+        }
+
+        function checkAndResetMonthlySales() {
+            const currentMonth = getMonthIdentifier(new Date());
+            const lastMonth = localStorage.getItem('last_month_reset_v9');
+
+            if (lastMonth && lastMonth !== currentMonth) {
+                sendMonthlyReport(monthlyTotalSales, monthlyTotalDiscounts, monthlyGameSales);
+
+                monthlyTotalSales = 0;
+                monthlyTotalDiscounts = 0;
+                monthlyGameSales = 0;
+                productSalesStats.monthly = {};
+
+                localStorage.setItem('monthly_sales_hidden_v9', 0);
+                localStorage.setItem('monthly_discounts_hidden_v9', 0);
+                localStorage.setItem('monthly_games_sales_v9', 0);
+                saveToStorage();
+            }
+            localStorage.setItem('last_month_reset_v9', currentMonth);
+        }
+
+        function checkAndResetAllPeriods() {
+            checkAndResetDailySales();
+            checkAndResetWeeklySales();
+            checkAndResetMonthlySales();
+        }
+
+        function sendWeeklyReport(totalSales, totalDiscounts, gameSales) {
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            let msg = `📅 *تقرير مبيعات الأسبوع المنتهي*\n`;
+            msg += `🗓️ حتى تاريخ: ${formattedDate}\n`;
+            msg += `-------------------------\n`;
+            msg += `💰 إجمالي مبيعات الأسبوع: *${totalSales.toLocaleString()} د.ع*\n`;
+            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
+            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
+            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            msg += `-------------------------\n`;
+            msg += `✨ تم بدء أسبوع عمل جديد وتصفير عداد الأسبوع تلقائياً بنجاح.`;
+
+            pendingInvoices.push(msg);
+            saveToStorage();
+            processPendingInvoices();
+        }
+
+        function sendMonthlyReport(totalSales, totalDiscounts, gameSales) {
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' });
+
+            let msg = `🗓️ *تقرير مبيعات الشهر المنتهي*\n`;
+            msg += `🗓️ لشهر: ${formattedDate}\n`;
+            msg += `-------------------------\n`;
+            msg += `💰 إجمالي مبيعات الشهر: *${totalSales.toLocaleString()} د.ع*\n`;
+            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
+            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
+            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            msg += `-------------------------\n`;
+            msg += `✨ تم بدء شهر عمل جديد وتصفير عداد الشهر تلقائياً بنجاح.`;
+
+            pendingInvoices.push(msg);
+            saveToStorage();
+            processPendingInvoices();
+        }
+
+        function triggerManualWeeklyReport() {
+            const pin = prompt("أدخل الرمز السري لإرسال التقرير الأسبوعي وتصفيره:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            sendWeeklyReport(weeklyTotalSales, weeklyTotalDiscounts, weeklyGameSales);
+
+            weeklyTotalSales = 0;
+            weeklyTotalDiscounts = 0;
+            weeklyGameSales = 0;
+            productSalesStats.weekly = {};
+
+            localStorage.setItem('weekly_sales_hidden_v9', 0);
+            localStorage.setItem('weekly_discounts_hidden_v9', 0);
+            localStorage.setItem('weekly_games_sales_v9', 0);
+
+            saveToStorage();
+            renderProductStatsList(currentStatsPeriod);
+            alert("تم إرسال التقرير الأسبوعي وتصفيره بنجاح! 📅✨");
+        }
+
+        function triggerManualMonthlyReport() {
+            const pin = prompt("أدخل الرمز السري لإرسال التقرير الشهري وتصفيره:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            sendMonthlyReport(monthlyTotalSales, monthlyTotalDiscounts, monthlyGameSales);
+
+            monthlyTotalSales = 0;
+            monthlyTotalDiscounts = 0;
+            monthlyGameSales = 0;
+            productSalesStats.monthly = {};
+
+            localStorage.setItem('monthly_sales_hidden_v9', 0);
+            localStorage.setItem('monthly_discounts_hidden_v9', 0);
+            localStorage.setItem('monthly_games_sales_v9', 0);
+
+            saveToStorage();
+            renderProductStatsList(currentStatsPeriod);
+            alert("تم إرسال التقرير الشهري وتصفيره بنجاح! 🗓️✨");
+        }
+
+        function updatePs4Price() {
+            const pin = prompt("أدخل الرمز السري لتغيير سعر ساعة الـ PS4:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            const newPriceInput = document.getElementById('setting-ps-price').value;
+            const newPrice = parseInt(newPriceInput);
+
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert("الرجاء إدخال سعر صحيح أكبر من الصفر!");
+                return;
+            }
+
+            psPricePerHour = newPrice;
+            localStorage.setItem('cafe_ps_price_v9', psPricePerHour);
+            saveToStorage();
+            renderDynamicMenu();
+            alert(`تم تحديث سعر ساعة الـ PS4 إلى ${psPricePerHour.toLocaleString()} د.ع بنجاح! ✅`);
+        }
+
+        function updateTotalTables() {
+            const pin = prompt("أدخل الرمز السري لتغيير عدد الطاولات:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            const input = document.getElementById('setting-total-tables').value;
+            const newCount = parseInt(input);
+
+            if (isNaN(newCount) || newCount < 1 || newCount > 60) {
+                alert("الرجاء إدخال عدد طاولات صحيح (بين 1 و 60)!");
+                return;
+            }
+
+            if (newCount < totalTables) {
+                for (let i = newCount + 1; i <= totalTables; i++) {
+                    const t = tablesData[i];
+                    if (t && (t.items.length > 0 || t.psActive || t.psElapsedCost > 0)) {
+                        alert(`لا يمكن تقليل العدد! يوجد حساب مفتوح بطاولة ${i}. الرجاء تصفية كل الطاولات الزائدة أولاً.`);
+                        return;
+                    }
+                }
+            }
+
+            if (newCount > totalTables) {
+                for (let i = totalTables + 1; i <= newCount; i++) {
+                    if (!tablesData[i]) {
+                        tablesData[i] = {
+                            items: [],
+                            psActive: false,
+                            psStartTime: null,
+                            psElapsedCost: 0,
+                            psTimeString: '00:00:00',
+                            startClock: '',
+                            stopClock: '',
+                            discount: 0,
+                            psIsLimit: false,
+                            psLimitMinutes: 0,
+                            psTimeRemainingString: '00:00:00',
+                            alarmTriggered: false
+                        };
+                    }
+                }
+            }
+
+            totalTables = newCount;
+            localStorage.setItem('cafe_total_tables_v9', totalTables);
+
+            if (activeTable > totalTables) {
+                activeTable = 1;
+            }
+
+            saveToStorage();
+            renderTablesBar();
+            switchTable(activeTable);
+            alert(`تم تحديث عدد الطاولات إلى ${totalTables} بنجاح! ✅`);
+        }
+
+        function trackProductSale(statKey, statName, qty, revenue) {
+            ['daily', 'weekly', 'monthly'].forEach(period => {
+                if (!productSalesStats[period][statKey]) {
+                    productSalesStats[period][statKey] = { name: statName, qty: 0, revenue: 0 };
+                }
+                productSalesStats[period][statKey].qty += qty;
+                productSalesStats[period][statKey].revenue += revenue;
+            });
+        }
+
+        function switchStatsPeriod(period, btn) {
+            currentStatsPeriod = period;
+            document.querySelectorAll('.stats-period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProductStatsList(period);
+        }
+
+        function renderProductStatsList(period) {
+            const container = document.getElementById('product-stats-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const data = productSalesStats[period] || {};
+            const list = Object.values(data).sort((a, b) => b.qty - a.qty);
+
+            if (list.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; font-size:0.75rem; padding:10px;">لا توجد مبيعات مسجلة بعد لهذه الفترة.</p>';
+                return;
+            }
+
+            list.forEach((prod, index) => {
+                const row = document.createElement('div');
+                row.className = 'settings-item-row';
+                row.innerHTML = `
+                    <div class="row-info">
+                        <strong>${index + 1}. ${prod.name}</strong>
+                        <span class="row-cat">الكمية المباعة: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} د.ع</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // اسم الفترة بالعربي لاستخدامه بنص التقرير
+        function getPeriodArabicLabel(period) {
+            if (period === 'daily') return 'اليوم';
+            if (period === 'weekly') return 'الأسبوع';
+            if (period === 'monthly') return 'الشهر';
+            return period;
+        }
+
+        // إرسال تقرير المنتجات الأكثر مبيعاً للفترة المختارة حالياً بتيليجرام ثم تصفير إحصائيات تلك الفترة فقط
+        function sendMostSoldReportAndReset() {
+            const pin = prompt("أدخل الرمز السري لإرسال تقرير الأكثر مبيعاً وتصفيره:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            const period = currentStatsPeriod;
+            const data = productSalesStats[period] || {};
+            const list = Object.values(data).sort((a, b) => b.qty - a.qty);
+
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const formattedTime = formatTimeClock(now.getTime());
+
+            let msg = `📊 *تقرير المنتجات الأكثر مبيعاً - ${getPeriodArabicLabel(period)}*\n`;
+            msg += `📅 التاريخ: ${formattedDate}\n`;
+            msg += `⏰ الوقت: ${formattedTime}\n`;
+            msg += `-------------------------\n`;
+
+            if (list.length === 0) {
+                msg += `لا توجد مبيعات مسجلة لهذه الفترة.\n`;
+            } else {
+                list.forEach((prod, index) => {
+                    msg += `${index + 1}. ${prod.name} — الكمية: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} د.ع\n`;
+                });
+            }
+
+            msg += `-------------------------\n`;
+            msg += `✨ تم تصفير إحصائيات "الأكثر مبيعاً" لهذه الفترة (${getPeriodArabicLabel(period)}) بنجاح.`;
+
+            pendingInvoices.push(msg);
+
+            productSalesStats[period] = {};
+
+            saveToStorage();
+            renderProductStatsList(period);
+            processPendingInvoices();
+
+            alert(`تم إرسال تقرير الأكثر مبيعاً (${getPeriodArabicLabel(period)}) وتصفيره بنجاح! 📤✨`);
+        }
+
+        // ============ نظام ترقيم الفواتير والقرعة الدورية (10 آلاف دينار فأكثر) ============
+
+        // يسجل فاتورة مؤهلة للقرعة (10 آلاف دينار فأكثر) ويرجع رقمها، أو null إذا ما تأهلت
+        function registerInvoiceForLottery(amount, tableNum) {
+            if (amount < 10000) return null;
+
+            invoiceLottery.currentNumber += 1;
+            const now = new Date();
+            const entry = {
+                number: invoiceLottery.currentNumber,
+                amount: amount,
+                table: tableNum,
+                date: now.toLocaleDateString('ar-EG'),
+                time: formatTimeClock(now.getTime())
+            };
+            invoiceLottery.invoices.push(entry);
+
+            if (invoiceLottery.currentNumber >= 100) {
+                // نأجل القرعة لبعد إتمام حفظ وإرسال الفاتورة الحالية بشكل طبيعي
+                setTimeout(runInvoiceLotteryDraw, 800);
+            }
+
+            return entry;
+        }
+
+        // القرعة العشوائية: تختار فاتورة فائزة واحدة من كل 100 فاتورة مسجلة، ثم تصفر العداد وتبدأ دورة جديدة
+        function runInvoiceLotteryDraw() {
+            if (invoiceLottery.invoices.length === 0) return;
+
+            const winnerIndex = Math.floor(Math.random() * invoiceLottery.invoices.length);
+            const winner = invoiceLottery.invoices[winnerIndex];
+            const finishedCycleId = invoiceLottery.cycleId;
+            const now = new Date();
+
+            invoiceLottery.lastWinner = {
+                ...winner,
+                cycleId: finishedCycleId,
+                drawDate: now.toLocaleDateString('ar-EG'),
+                drawTime: formatTimeClock(now.getTime())
+            };
+
+            let msg = `🎉 *نتيجة قرعة الفواتير - الدورة رقم ${finishedCycleId}* 🎉\n`;
+            msg += `-------------------------\n`;
+            msg += `🏆 الفاتورة الفائزة: رقم *${winner.number}*\n`;
+            msg += `💰 قيمتها: ${winner.amount.toLocaleString()} د.ع\n`;
+            msg += `📅 تاريخها: ${winner.date} - ${winner.time}\n`;
+            msg += `▪️ طاولة رقم: ${winner.table}\n`;
+            msg += `-------------------------\n`;
+            msg += `🎁 الجائزة: خصم 10,000 د.ع على الفاتورة القادمة لصاحب هذه الفاتورة!\n`;
+            msg += `✨ اكتملت 100 فاتورة، وتبدأ الآن دورة ترقيم جديدة من رقم 1.`;
+
+            pendingInvoices.push(msg);
+
+            invoiceLottery.currentNumber = 0;
+            invoiceLottery.invoices = [];
+            invoiceLottery.cycleId = finishedCycleId + 1;
+
+            saveToStorage();
+            processPendingInvoices();
+            renderLotteryUI();
+
+            alert(`🎉 اكتملت 100 فاتورة!\nالفاتورة الفائزة بخصم 10,000 د.ع هي رقم ${winner.number} (${winner.amount.toLocaleString()} د.ع - طاولة ${winner.table}) بتاريخ ${winner.date}.\nبدأت دورة ترقيم جديدة من جديد. ✨`);
+        }
+
+        // إجراء القرعة يدوياً قبل اكتمال الـ 100 (من الإعدادات فقط)
+        function manualRunLotteryDraw() {
+            if (invoiceLottery.invoices.length === 0) {
+                alert('ما في فواتير مسجلة بالدورة الحالية بعد!');
+                return;
+            }
+            if (!confirm(`متأكد تريد تسوي القرعة الآن؟ بس ${invoiceLottery.invoices.length} فاتورة مسجلة من أصل 100 بالدورة الحالية.`)) return;
+            runInvoiceLotteryDraw();
+        }
+
+        // عرض حالة القرعة الحالية بتبويب الإعدادات
+        function renderLotteryUI() {
+            const progressEl = document.getElementById('lottery-progress-text');
+            const listEl = document.getElementById('lottery-invoices-list');
+            const winnerEl = document.getElementById('lottery-last-winner');
+            if (!progressEl) return;
+
+            progressEl.innerText = `الدورة رقم ${invoiceLottery.cycleId} — ${invoiceLottery.currentNumber} / 100 فاتورة`;
+
+            if (listEl) {
+                listEl.innerHTML = '';
+                if (invoiceLottery.invoices.length === 0) {
+                    listEl.innerHTML = '<p style="text-align:center; color:#888; font-size:0.72rem; padding:8px;">ما في فواتير مسجلة بالدورة الحالية بعد.</p>';
+                } else {
+                    [...invoiceLottery.invoices].reverse().forEach(inv => {
+                        const row = document.createElement('div');
+                        row.className = 'settings-item-row';
+                        row.innerHTML = `
+                            <div class="row-info">
+                                <strong>فاتورة رقم ${inv.number}</strong>
+                                <span class="row-cat">${inv.amount.toLocaleString()} د.ع | طاولة ${inv.table} | ${inv.date} - ${inv.time}</span>
+                            </div>
+                        `;
+                        listEl.appendChild(row);
+                    });
+                }
+            }
+
+            if (winnerEl) {
+                if (invoiceLottery.lastWinner) {
+                    const w = invoiceLottery.lastWinner;
+                    winnerEl.innerHTML = `🏆 آخر فائز (الدورة ${w.cycleId}): فاتورة رقم <strong>${w.number}</strong> بقيمة ${w.amount.toLocaleString()} د.ع - طاولة ${w.table} - بتاريخ ${w.date} ${w.time} (القرعة بتاريخ ${w.drawDate} ${w.drawTime})`;
+                } else {
+                    winnerEl.innerText = 'ما صارت أي قرعة لحد الآن.';
+                }
+            }
+        }
+        // ============ نهاية نظام ترقيم الفواتير والقرعة ============
+
+        function triggerManualReport() {
+            const pin = prompt("الرجاء إدخال الرمز السري لإرسال التقرير وتصفير السجل:");
+            if (pin === null) return; 
+            
+            if (isValidAdminPin(pin)) {
+                const now = new Date();
+                const formattedDate = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const formattedTime = formatTimeClock(now.getTime());
+
+                let reportMsg = `📊 *تقرير إغلاق يدوي وتصفير السجل*\n`;
+                reportMsg += `📅 التاريخ: ${formattedDate}\n`;
+                reportMsg += `⏰ وقت الإغلاق: ${formattedTime}\n`;
+                reportMsg += `-------------------------\n`;
+                reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${dailyTotalSales.toLocaleString()} د.ع*\n`;
+                reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${dailyGameSales.toLocaleString()} د.ع*\n`;
+                reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(dailyTotalSales - dailyGameSales).toLocaleString()} د.ع*\n`;
+                reportMsg += `📉 إجمالي الخصومات الممنوحة: *${dailyTotalDiscounts.toLocaleString()} د.ع*\n`;
+                reportMsg += `-------------------------\n`;
+                reportMsg += `⚠️ تم تصفير العدادات اليومية والسجل بالكامل يدوياً بنجاح.`;
+
+                pendingInvoices.push(reportMsg);
+                
+                dailyTotalSales = 0;
+                dailyTotalDiscounts = 0;
+                dailyGameSales = 0;
+                achievements.todayClosedBillsCount = 0;
+
+                localStorage.setItem('daily_sales_hidden_v9', 0);
+                localStorage.setItem('daily_discounts_hidden_v9', 0);
+                localStorage.setItem('daily_games_sales_v9', 0);
+
+                saveToStorage();
+                updateNetworkStatusUI();
+                processPendingInvoices();
+                updateAchievementsUI();
+                
+                alert("تم إرسال التقرير وتصفير السجل اليومي بالكامل بنجاح! 🧹✨");
+            } else {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+            }
+        }
+
+        function sendAchievementsReportAndReset() {
+            const pin = prompt("أدخل الرمز السري لإرسال تقرير الإنجازات وتصفيرها:");
+            if (pin === null) return;
+
+            if (!isValidAdminPin(pin)) {
+                alert("الرمز السري خاطئ! تم إلغاء العملية.");
+                return;
+            }
+
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const formattedTime = formatTimeClock(now.getTime());
+
+            const hoursLogged = Math.floor(achievements.psActiveMinutes / 60);
+            const minsLogged = Math.floor(achievements.psActiveMinutes % 60);
+
+            let msg = `🏆 *تقرير لوحة الإنجازات - كيمز كوفي*\n`;
+            msg += `📅 التاريخ: ${formattedDate}\n`;
+            msg += `⏰ الوقت: ${formattedTime}\n`;
+            msg += `-------------------------\n`;
+            msg += `🥇 المبيعات التراكمية: *${achievements.cumulativeSales.toLocaleString()} / 1,000,000 د.ع* ${achievements.cumulativeSales >= 1000000 ? '(تم الإنجاز ✅)' : ''}\n`;
+            msg += `💧 قناني الماء المباعة: *${achievements.waterBottlesSold} / 100 قنينة* ${achievements.waterBottlesSold >= 100 ? '(تم الإنجاز ✅)' : ''}\n`;
+            msg += `🎮 ساعات تشغيل الـ PS: *${hoursLogged}س ${minsLogged}د / 50 ساعة* ${achievements.psActiveMinutes >= 3000 ? '(تم الإنجاز ✅)' : ''}\n`;
+            msg += `🔥 فواتير اليوم المغلقة: *${achievements.todayClosedBillsCount} فاتورة*\n`;
+            msg += `-------------------------\n`;
+            msg += `✨ تم تصفير لوحة الإنجازات بالكامل بنجاح، وبدء تجميع جديد من الصفر.`;
+
+            pendingInvoices.push(msg);
+
+            achievements.cumulativeSales = 0;
+            achievements.waterBottlesSold = 0;
+            achievements.psActiveMinutes = 0;
+            achievements.todayClosedBillsCount = 0;
+
+            saveToStorage();
+            updateAchievementsUI();
+            processPendingInvoices();
+
+            alert("تم إرسال تقرير الإنجازات وتصفيرها بنجاح! 🏆✨");
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('cafe_pos_v9', JSON.stringify(tablesData));
+            localStorage.setItem('daily_sales_hidden_v9', dailyTotalSales);
+            localStorage.setItem('daily_discounts_hidden_v9', dailyTotalDiscounts);
+            localStorage.setItem('daily_games_sales_v9', dailyGameSales);
+            localStorage.setItem('pending_invoices_queue_v9', JSON.stringify(pendingInvoices));
+            localStorage.setItem('cafe_products_list_v9', JSON.stringify(productsList));
+            localStorage.setItem('cafe_system_pin_v9', systemPin);
+            localStorage.setItem('cafe_achievements_v9', JSON.stringify(achievements));
+            localStorage.setItem('weekly_sales_hidden_v9', weeklyTotalSales);
+            localStorage.setItem('weekly_discounts_hidden_v9', weeklyTotalDiscounts);
+            localStorage.setItem('weekly_games_sales_v9', weeklyGameSales);
+            localStorage.setItem('monthly_sales_hidden_v9', monthlyTotalSales);
+            localStorage.setItem('monthly_discounts_hidden_v9', monthlyTotalDiscounts);
+            localStorage.setItem('monthly_games_sales_v9', monthlyGameSales);
+            localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
+            localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
+            localStorage.setItem('cafe_invoice_lottery_v9', JSON.stringify(invoiceLottery));
+        }
+
+        function formatTimeClock(timestamp) {
+            if(!timestamp) return '';
+            const date = new Date(timestamp);
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            const ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        function updateNetworkStatusUI() {
+            const indicator = document.getElementById('network-indicator');
+            if (navigator.onLine) {
+                indicator.innerText = `متصل ${pendingInvoices.length > 0 ? `(${pendingInvoices.length})` : ''}`;
+                indicator.className = "network-status status-online";
+                processPendingInvoices();
+            } else {
+                indicator.innerText = `أوفلاين (${pendingInvoices.length})`;
+                indicator.className = "network-status status-offline";
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatusUI);
+        window.addEventListener('offline', updateNetworkStatusUI);
+
+        function playBeepSound() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.error("فشل تشغيل الصوت:", e);
+            }
+        }
+
+        function checkActiveAlarms() {
+            let anyAlarm = false;
+            for(let i = 1; i <= totalTables; i++) {
+                if(tablesData[i].alarmTriggered) {
+                    anyAlarm = true;
+                    break;
+                }
+            }
+
+            if(anyAlarm) {
+                if(!alarmIntervalId) {
+                    playBeepSound();
+                    alarmIntervalId = setInterval(playBeepSound, 1000); 
+                }
+            } else {
+                if(alarmIntervalId) {
+                    clearInterval(alarmIntervalId);
+                    alarmIntervalId = null;
+                }
+            }
+        }
+
+        function renderDynamicMenu() {
+            const container = document.getElementById('dynamic-menu-container');
+            container.innerHTML = '';
+
+            const categories = [
+                { key: 'games', title: '🎮 صالة الألعاب والترفيه' },
+                { key: 'hot', title: '☕ مشروبات حارة' },
+                { key: 'cold', title: '🍹 مشروبات باردة وعصائر' },
+                { key: 'food', title: '🍔 أكلات ونراكيل وحلويات' }
+            ];
+
+            categories.forEach(cat => {
+                const block = document.createElement('div');
+                block.className = 'category-block';
+                
+                let html = `<h3 class="category-title" style="color: var(--accent-color); border-bottom-color: var(--border-color);">${cat.title}</h3>`;
+                html += `<div class="grid">`;
+
+                if (cat.key === 'games') {
+                    html += `
+                        <div class="product-card" style="background-color: var(--ps4-color);" onclick="startPsTimer(false, 0)">
+                            <span class="prod-name">PS4 مفتوح</span>
+                            <span class="prod-price">${psPricePerHour.toLocaleString()} د.ع / س</span>
+                        </div>
+                        <div class="product-card" style="background-color: var(--ps4-limit-color);" onclick="startPsTimerLimitPrompt()">
+                            <span class="prod-name">PS4 محدد</span>
+                            <span class="prod-price">${psPricePerHour.toLocaleString()} د.ع / س</span>
+                        </div>
+                    `;
+                }
+
+                const catProducts = productsList.filter(p => p.category === cat.key);
+                catProducts.forEach(prod => {
+                    html += `
+                        <div class="product-card" onclick="addItemToActiveTable({id: ${prod.id}, name: '${prod.name}', price: ${prod.price}, category: '${prod.category}'})">
+                            <span class="prod-name">${prod.name}</span>
+                            <span class="prod-price">${prod.price.toLocaleString()} د.ع</span>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                block.innerHTML = html;
+                container.appendChild(block);
+            });
+        }
+
+        function openSettingsWithPin() {
+            const pin = prompt("أدخل الرمز السري لفتح الإعدادات:");
+            if (isValidAdminPin(pin)) {
+                document.getElementById('settings-modal').style.display = 'flex';
+                renderSettingsItemsList();
+                updateAchievementsUI();
+
+                document.getElementById('setting-ps-price').value = psPricePerHour;
+                document.getElementById('setting-total-tables').value = totalTables;
+
+                currentStatsPeriod = 'daily';
+                document.querySelectorAll('.stats-period-btn').forEach(b => b.classList.remove('active'));
+                const firstStatsBtn = document.querySelector('.stats-period-btn');
+                if (firstStatsBtn) firstStatsBtn.classList.add('active');
+                renderProductStatsList('daily');
+
+                renderLotteryUI();
+                renderAdminsList();
+                loadConnectionSettingsUI();
+            } else if (pin !== null) {
+                alert("الرمز السري خاطئ!");
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('pin-current').value = '';
+            document.getElementById('pin-new').value = '';
+            document.getElementById('pin-confirm').value = '';
+        }
+
+        function switchSettingsTab(tabId, btn) {
+            const panels = document.querySelectorAll('.tab-panel');
+            panels.forEach(p => p.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.settings-tab-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function changeSystemPin() {
+            const currentInput = document.getElementById('pin-current').value;
+            const newInput = document.getElementById('pin-new').value;
+            const confirmInput = document.getElementById('pin-confirm').value;
+
+            if (!currentInput || !newInput || !confirmInput) {
+                alert("يرجى ملء جميع حقول الرمز السري!");
+                return;
+            }
+
+            if (currentInput !== systemPin) {
+                alert("الرمز السري الحالي غير صحيح!");
+                return;
+            }
+
+            if (newInput !== confirmInput) {
+                alert("الرمز السري الجديد غير متطابق مع التأكيد!");
+                return;
+            }
+
+            if (newInput.length < 4) {
+                alert("من أجل الأمان، يجب أن يتكون الرمز الجديد من 4 خانات أو أكثر!");
+                return;
+            }
+
+            systemPin = newInput;
+            saveToStorage();
+            
+            document.getElementById('pin-current').value = '';
+            document.getElementById('pin-new').value = '';
+            document.getElementById('pin-confirm').value = '';
+
+            alert("🔒 تم تحديث الرمز السري بنجاح! سيتم استخدامه من الآن فصاعداً.");
+        }
+
+        function renderSettingsItemsList() {
+            const container = document.getElementById('settings-items-list-container');
+            container.innerHTML = '';
+
+            const catLabels = {
+                'games': 'ألعاب وترفيه',
+                'hot': 'مشروبات حارة',
+                'cold': 'مشروبات باردة',
+                'food': 'أكلات ونراكيل'
+            };
+
+            productsList.forEach(prod => {
+                const row = document.createElement('div');
+                row.className = 'settings-item-row';
+                row.innerHTML = `
+                    <div class="row-info">
+                        <strong>${prod.name}</strong>
+                        <span class="row-cat">قسم: ${catLabels[prod.category] || prod.category} | السعر: ${prod.price.toLocaleString()} د.ع</span>
+                    </div>
+                    <div class="row-actions">
+                        <button class="btn-row-edit" onclick="editProductPrice(${prod.id})">✏️ تعديل السعر</button>
+                        <button class="btn-row-delete" onclick="deleteProduct(${prod.id})">🗑️ حذف</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addNewProduct() {
+            const name = document.getElementById('new-item-name').value.trim();
+            const price = parseInt(document.getElementById('new-item-price').value);
+            const category = document.getElementById('new-item-category').value;
+
+            if (!name || isNaN(price) || price <= 0) {
+                alert("يرجى إدخال اسم المادة وسعر صحيح!");
+                return;
+            }
+
+            const newId = new Date().getTime(); 
+            productsList.push({ id: newId, name, price, category });
+            saveToStorage();
+            
+            document.getElementById('new-item-name').value = '';
+            document.getElementById('new-item-price').value = '';
+            
+            renderSettingsItemsList();
+            renderDynamicMenu();
+            alert(`تمت إضافة "${name}" للمنيو بنجاح! 🎉`);
+        }
+
+        function editProductPrice(id) {
+            const prod = productsList.find(p => p.id === id);
+            if (!prod) return;
+
+            const newPriceInput = prompt(`أدخل السعر الجديد لمادة (${prod.name}):`, prod.price);
+            if (newPriceInput === null) return;
+
+            const newPrice = parseInt(newPriceInput);
+            if (isNaN(newPrice) || newPrice < 0) {
+                alert("السعر غير صالح!");
+                return;
+            }
+
+            prod.price = newPrice;
+            saveToStorage();
+            renderSettingsItemsList();
+            renderDynamicMenu();
+            renderOrderList();
+        }
+
+        function deleteProduct(id) {
+            const prod = productsList.find(p => p.id === id);
+            if (!prod) return;
+
+            if (confirm(`هل أنت متأكد من حذف مادة (${prod.name}) نهائياً من المنيو؟`)) {
+                productsList = productsList.filter(p => p.id !== id);
+                saveToStorage();
+                renderSettingsItemsList();
+                renderDynamicMenu();
+            }
+        }
+
+        // تحديث وعرض الإنجازات في واجهة الإعدادات مع المؤشرات المائية الدقيقة
+        function updateAchievementsUI() {
+            // 1. أول مليون مبيعات
+            const salesGoal = 1000000;
+            const salesProgressPercent = Math.min((achievements.cumulativeSales / salesGoal) * 100, 100);
+            document.getElementById('ach-million-progress').style.width = salesProgressPercent + '%';
+            document.getElementById('ach-million-text').innerText = `${achievements.cumulativeSales.toLocaleString()} / 1,000,000 د.ع`;
+            if (achievements.cumulativeSales >= salesGoal) {
+                document.getElementById('ach-million-badge').innerText = '🏆 تم الإنجاز!';
+                document.getElementById('ach-million-badge').style.color = '#2ecc71';
+            } else {
+                document.getElementById('ach-million-badge').innerText = '❌ قيد التقدم';
+                document.getElementById('ach-million-badge').style.color = '#e74c3c';
+            }
+
+            // 2. تتبع بيع 100 بطل ماء (تمت ترقيته ليعمل تلقائياً كبديل آمن وسريع وبدون مشاكل)
+            const waterGoal = 100;
+            const waterProgressPercent = Math.min((achievements.waterBottlesSold / waterGoal) * 100, 100);
+            document.getElementById('ach-water-progress').style.width = waterProgressPercent + '%';
+            document.getElementById('ach-water-text').innerText = `${achievements.waterBottlesSold} / 100 قنينة ماء`;
+            if (achievements.waterBottlesSold >= waterGoal) {
+                document.getElementById('ach-water-badge').innerText = '🥈 تم الإنجاز!';
+                document.getElementById('ach-water-badge').style.color = '#2ecc71';
+            } else {
+                document.getElementById('ach-water-badge').innerText = '❌ قيد التقدم';
+                document.getElementById('ach-water-badge').style.color = '#e67e22';
+            }
+
+            // 3. تشغيل 50 ساعة بلايستيشن
+            const psGoalMinutes = 50 * 60; 
+            const psProgressPercent = Math.min((achievements.psActiveMinutes / psGoalMinutes) * 100, 100);
+            document.getElementById('ach-ps-hours-progress').style.width = psProgressPercent + '%';
+            
+            const hoursLogged = Math.floor(achievements.psActiveMinutes / 60);
+            const minsLogged = Math.floor(achievements.psActiveMinutes % 60);
+            document.getElementById('ach-ps-hours-text').innerText = `${hoursLogged} س و ${minsLogged} د / 50 ساعة`;
+            
+            if (achievements.psActiveMinutes >= psGoalMinutes) {
+                document.getElementById('ach-ps-hours-badge').innerText = '🥇 تم الإنجاز!';
+                document.getElementById('ach-ps-hours-badge').style.color = '#2ecc71';
+            } else {
+                document.getElementById('ach-ps-hours-badge').innerText = '🔒 قيد التجميع';
+                document.getElementById('ach-ps-hours-badge').style.color = '#3498db';
+            }
+
+            // 4. فواتير اليوم المغلقة
+            document.getElementById('ach-bills-text').innerText = `${achievements.todayClosedBillsCount} فاتورة مغلقة اليوم`;
+        }
+
+        setInterval(() => {
+            updateNetworkStatusUI();
+            
+            let updated = false;
+            const now = new Date().getTime();
+
+            for(let i = 1; i <= totalTables; i++) {
+                if(tablesData[i].psActive) {
+                    const diffInMs = now - tablesData[i].psStartTime;
+                    
+                    const totalSecs = Math.floor(diffInMs / 1000);
+                    const hours = Math.floor(totalSecs / 3600);
+                    const mins = Math.floor((totalSecs % 3600) / 60);
+                    const secs = totalSecs % 60;
+                    
+                    tablesData[i].psTimeString = 
+                        `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    
+                    const diffInHours = diffInMs / (1000 * 60 * 60);
+                    tablesData[i].psElapsedCost = Math.round(diffInHours * psPricePerHour);
+
+                    if (tablesData[i].psIsLimit) {
+                        const limitMs = tablesData[i].psLimitMinutes * 60 * 1000;
+                        const remainingMs = limitMs - diffInMs;
+
+                        if (remainingMs <= 0) {
+                            tablesData[i].psTimeRemainingString = '00:00:00';
+                            autoStopAndArchivePsTimer(i);
+                        } else {
+                            const remTotalSecs = Math.floor(remainingMs / 1000);
+                            const remHours = Math.floor(remTotalSecs / 3600);
+                            const remMins = Math.floor((remTotalSecs % 3600) / 60);
+                            const remSecs = remTotalSecs % 60;
+                            
+                            tablesData[i].psTimeRemainingString = 
+                                `${remHours.toString().padStart(2, '0')}:${remMins.toString().padStart(2, '0')}:${remSecs.toString().padStart(2, '0')}`;
+                        }
+                    }
+
+                    updated = true;
+                }
+            }
+            
+            checkActiveAlarms();
+
+            if(updated) {
+                renderOrderList();
+                updatePsTimerUI();
+            }
+        }, 1000);
+
+        function autoStopAndArchivePsTimer(tableNum) {
+            const table = tablesData[tableNum];
+            if(!table.psActive) return;
+
+            const limitMs = table.psLimitMinutes * 60 * 1000;
+            const cost = Math.round((limitMs / (1000 * 60 * 60)) * psPricePerHour);
+            const timeStr = `${Math.floor(table.psLimitMinutes / 60).toString().padStart(2, '0')}:${(table.psLimitMinutes % 60).toString().padStart(2, '0')}:00`;
+            
+            const stopTimeClock = formatTimeClock(table.psStartTime + limitMs);
+            const startTimeClock = table.startClock;
+
+            achievements.psActiveMinutes += table.psLimitMinutes;
+
+            if (cost > 0) {
+                const psItemId = 9999 + new Date().getTime() + tableNum; 
+                table.items.push({
+                    id: psItemId,
+                    name: `وقت PS4 محدد (${timeStr})`,
+                    timeDetails: `🛫 ${startTimeClock} ◀ 🛬 ${stopTimeClock} (انتهى وقت الحجز)`,
+                    price: cost,
+                    category: 'games',
+                    qty: 1
+                });
+            }
+
+            table.psActive = false;
+            table.psStartTime = null;
+            table.psElapsedCost = 0;
+            table.psTimeString = '00:00:00';
+            table.startClock = '';
+            table.stopClock = '';
+            table.psIsLimit = false;
+            table.psLimitMinutes = 0;
+            table.psTimeRemainingString = '00:00:00';
+            table.alarmTriggered = true; 
+
+            saveToStorage();
+            renderTablesBar();
+            checkActiveAlarms();
+            updateAchievementsUI();
+            
+            if (activeTable === tableNum) {
+                updatePsTimerUI();
+                renderOrderList();
+            }
+        }
+
+        function silenceAlarm(tableNum) {
+            if(tablesData[tableNum]) {
+                tablesData[tableNum].alarmTriggered = false;
+                saveToStorage();
+                renderTablesBar();
+                updatePsTimerUI();
+                checkActiveAlarms();
+            }
+        }
+
+        function renderTablesBar() {
+            const container = document.getElementById('tables-container');
+            container.innerHTML = '';
+            
+            for(let i = 1; i <= totalTables; i++) {
+                const table = tablesData[i];
+                const btn = document.createElement('button');
+                let className = 'table-btn';
+                
+                if(activeTable === i) {
+                    btn.style.backgroundColor = 'var(--accent-color)';
+                    btn.style.borderColor = 'var(--accent-color)';
+                    btn.style.color = '#000';
+                } else {
+                    btn.style.backgroundColor = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }
+                
+                if(activeTable === i) className += ' active';
+                if(table.items.length > 0 || table.psElapsedCost > 0) className += ' has-items';
+                if(table.psActive) className += ' ps-running';
+                
+                if(table.alarmTriggered) {
+                    className += ' time-out-alert';
+                }
+                
+                btn.className = className;
+                btn.innerText = `طاولة ${i}`;
+                btn.onclick = () => {
+                    if (!audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    switchTable(i);
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        function switchTable(tableNum) {
+            activeTable = tableNum;
+            document.getElementById('active-table-name').innerText = `طاولة ${tableNum}`;
+            document.getElementById('discount-field').value = tablesData[tableNum].discount || '';
+            
+            renderTablesBar();
+            renderOrderList();
+            updatePsTimerUI();
+        }
+
+        function updateDiscountValue(val) {
+            let discountAmt = parseInt(val) || 0;
+            if(discountAmt < 0) discountAmt = 0;
+            tablesData[activeTable].discount = discountAmt;
+            saveToStorage();
+            renderOrderList();
+        }
+
+        function transferActiveTable() {
+            let subtotal = calculateTableSubtotal(activeTable);
+            if(subtotal === 0 && !tablesData[activeTable].psActive) {
+                alert('الطاولة فارغة!');
+                return;
+            }
+
+            let targetInput = prompt(`أدخل رقم الطاولة الجديدة (1 إلى ${totalTables}):`);
+            if (targetInput === null) return;
+
+            let targetTable = parseInt(targetInput);
+            if (isNaN(targetTable) || targetTable < 1 || targetTable > totalTables) {
+                alert('رقم طاولة غير صحيح.');
+                return;
+            }
+
+            if (targetTable === activeTable) return;
+
+            let targetHasData = tablesData[targetTable].items.length > 0 || tablesData[targetTable].psElapsedCost > 0 || tablesData[targetTable].psActive;
+            if (targetHasData) {
+                if (!confirm(`هل تريد دمج حساب طاولة ${activeTable} مع طاولة ${targetTable}؟`)) return;
+            }
+
+            const now = new Date().getTime();
+
+            if (tablesData[activeTable].psActive && tablesData[targetTable].psActive) {
+                const activeDiffMs = now - tablesData[activeTable].psStartTime;
+                const activeCost = Math.round((activeDiffMs / (1000 * 60 * 60)) * psPricePerHour);
+                const activeTimeStr = tablesData[activeTable].psTimeString;
+                const startClockA = tablesData[activeTable].startClock;
+                const stopClockA = formatTimeClock(now);
+
+                if (activeCost > 0) {
+                    const psItemId = 9999 + new Date().getTime();
+                    tablesData[targetTable].items.push({
+                        id: psItemId,
+                        name: `وقت PS4 طاولة ${activeTable} (مندمج ${activeTimeStr})`,
+                        timeDetails: `🛫 ${startClockA} ◀ 🛬 ${stopClockA}`,
+                        price: activeCost,
+                        category: 'games',
+                        qty: 1
+                    });
+                }
+            } 
+            else if (tablesData[activeTable].psActive && !tablesData[targetTable].psActive) {
+                tablesData[targetTable].psActive = true;
+                tablesData[targetTable].psStartTime = tablesData[activeTable].psStartTime;
+                tablesData[targetTable].psTimeString = tablesData[activeTable].psTimeString;
+                tablesData[targetTable].startClock = tablesData[activeTable].startClock;
+                tablesData[targetTable].psElapsedCost = tablesData[activeTable].psElapsedCost;
+                tablesData[targetTable].psIsLimit = tablesData[activeTable].psIsLimit;
+                tablesData[targetTable].psLimitMinutes = tablesData[activeTable].psLimitMinutes;
+                tablesData[targetTable].psTimeRemainingString = tablesData[activeTable].psTimeRemainingString;
+            } 
+            else if (!tablesData[activeTable].psActive && tablesData[activeTable].psStartTime) {
+                if (tablesData[targetTable].psActive) {
+                    const cost = tablesData[activeTable].psElapsedCost;
+                    const timeStr = tablesData[activeTable].psTimeString;
+                    const psItemId = 9999 + new Date().getTime();
+                    tablesData[targetTable].items.push({
+                        id: psItemId,
+                        name: `وقت PS4 طاولة ${activeTable} (سابق ${timeStr})`,
+                        timeDetails: `🛫 ${tablesData[activeTable].startClock} ◀ 🛬 ${tablesData[activeTable].stopClock || 'مدمج'}`,
+                        price: cost,
+                        category: 'games',
+                        qty: 1
+                    });
+                } else {
+                    tablesData[targetTable].psElapsedCost += tablesData[activeTable].psElapsedCost;
+                    tablesData[targetTable].psTimeString = tablesData[activeTable].psTimeString;
+                    tablesData[targetTable].startClock = tablesData[activeTable].startClock;
+                }
+            }
+
+            tablesData[activeTable].items.forEach(sourceItem => {
+                let existingItem = tablesData[targetTable].items.find(i => i.id === sourceItem.id);
+                if (existingItem) {
+                    existingItem.qty += sourceItem.qty;
+                } else {
+                    tablesData[targetTable].items.push({ ...sourceItem });
+                }
+            });
+
+            tablesData[targetTable].discount += tablesData[activeTable].discount;
+
+            if(tablesData[activeTable].alarmTriggered) {
+                tablesData[targetTable].alarmTriggered = true;
+            }
+
+            tablesData[activeTable] = { 
+                items: [], 
+                psActive: false, 
+                psStartTime: null, 
+                psElapsedCost: 0, 
+                psTimeString: '00:00:00', 
+                startClock: '', 
+                stopClock: '', 
+                discount: 0,
+                psIsLimit: false,
+                psLimitMinutes: 0,
+                psTimeRemainingString: '00:00:00',
+                alarmTriggered: false
+            };
+
+            saveToStorage();
+            switchTable(targetTable);
+        }
+
+        function addItemToActiveTable(product) {
+            const currentOrder = tablesData[activeTable].items;
+            const existingItem = currentOrder.find(item => item.id === product.id);
+            
+            if(existingItem) {
+                existingItem.qty++;
+            } else {
+                currentOrder.push({ ...product, qty: 1 });
+            }
+            
+            saveToStorage();
+            renderTablesBar();
+            renderOrderList();
+        }
+
+        function startPsTimerLimitPrompt() {
+            if(tablesData[activeTable].psActive) return;
+
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            let minutesInput = prompt("أدخل وقت اللعب المحدد بالدقائق:\n(مثال: 30 لنصف ساعة، 60 لساعة، 120 لساعتين)");
+            if (minutesInput === null) return;
+            
+            let minutes = parseInt(minutesInput);
+            if (isNaN(minutes) || minutes <= 0) {
+                alert("الرجاء إدخال عدد دقائق صحيح وأكبر من الصفر.");
+                return;
+            }
+            startPsTimer(true, minutes);
+        }
+
+        function editActiveTimerStartTime() {
+            const table = tablesData[activeTable];
+            if(!table.psActive || !table.psStartTime) return;
+
+            let offsetMinutesInput = prompt("قبل كم دقيقة بدأ اللعب الفعلي بالطاولة؟\n(أدخل عدد الدقائق فقط، وسيتم إرجاع العداد بالكامل للخلف لإعادة الحساب):");
+            if (offsetMinutesInput === null) return;
+
+            let minutes = parseInt(offsetMinutesInput);
+            if (isNaN(minutes) || minutes <= 0) {
+                alert("الرجاء إدخال قيمة صحيحة وموجبة بالدقائق!");
+                return;
+            }
+
+            const timeOffsetMs = minutes * 60 * 1000;
+            table.psStartTime = table.psStartTime - timeOffsetMs;
+            table.startClock = formatTimeClock(table.psStartTime);
+
+            saveToStorage();
+            updatePsTimerUI();
+            renderOrderList();
+            alert(`تم تعديل وقت البدء يدوياً بنجاح! وقت البدء الجديد: ${table.startClock}`);
+        }
+
+        function startPsTimer(isLimit, limitMins) {
+            if(tablesData[activeTable].psActive) return;
+
+            const now = new Date().getTime();
+            tablesData[activeTable].psActive = true;
+            tablesData[activeTable].psIsLimit = isLimit;
+            tablesData[activeTable].psLimitMinutes = isLimit ? limitMins : 0;
+            tablesData[activeTable].alarmTriggered = false; 
+            
+            if(!tablesData[activeTable].psStartTime) {
+                tablesData[activeTable].psStartTime = now;
+                tablesData[activeTable].startClock = formatTimeClock(now);
+            } else {
+                tablesData[activeTable].psStartTime = now - (tablesData[activeTable].psElapsedCost / psPricePerHour * 60 * 60 * 1000);
+            }
+            
+            tablesData[activeTable].stopClock = '';
+            saveToStorage();
+            renderTablesBar();
+            updatePsTimerUI();
+            renderOrderList();
+        }
+
+        function stopPsTimer() {
+            if(!tablesData[activeTable].psActive) return;
+            
+            let cost = tablesData[activeTable].psElapsedCost;
+            let timeStr = tablesData[activeTable].psTimeString;
+            
+            const now = new Date().getTime();
+            const stopTimeClock = formatTimeClock(now);
+            const startTimeClock = tablesData[activeTable].startClock;
+
+            const diffInMs = now - tablesData[activeTable].psStartTime;
+            const activeMins = Math.floor(diffInMs / (1000 * 60));
+            achievements.psActiveMinutes += activeMins;
+
+            if (tablesData[activeTable].psIsLimit) {
+                timeStr = `${tablesData[activeTable].psTimeString} من أصل ${tablesData[activeTable].psLimitMinutes}د`;
+            }
+
+            if (cost > 0) {
+                const psItemId = 9999 + new Date().getTime(); 
+                tablesData[activeTable].items.push({
+                    id: psItemId,
+                    name: `وقت PS4 (${timeStr})`,
+                    timeDetails: `🛫 ${startTimeClock} ◀ 🛬 ${stopTimeClock}`,
+                    price: cost,
+                    category: 'games',
+                    qty: 1
+                });
+            }
+
+            tablesData[activeTable].psActive = false;
+            tablesData[activeTable].psStartTime = null;
+            tablesData[activeTable].psElapsedCost = 0;
+            tablesData[activeTable].psTimeString = '00:00:00';
+            tablesData[activeTable].startClock = '';
+            tablesData[activeTable].stopClock = '';
+            tablesData[activeTable].psIsLimit = false;
+            tablesData[activeTable].psLimitMinutes = 0;
+            tablesData[activeTable].psTimeRemainingString = '00:00:00';
+            tablesData[activeTable].alarmTriggered = false;
+
+            saveToStorage();
+            renderTablesBar();
+            updatePsTimerUI();
+            renderOrderList();
+            updateAchievementsUI();
+        }
+
+        function updatePsTimerUI() {
+            const statusBox = document.getElementById('ps-timer-status');
+            const table = tablesData[activeTable];
+
+            if(table.alarmTriggered) {
+                statusBox.innerHTML = `
+                    <div class="ps-timer-box has-alarm-triggered">
+                        <div class="ps-timer-info">
+                            <div>
+                                <span style="font-size: 0.95rem; font-weight:bold; color: #fff;">🔔 انتهى الوقت المحدد للطاولة!</span>
+                            </div>
+                            <div class="ps-timer-actions">
+                                <button class="btn-silence-alarm" onclick="silenceAlarm(${activeTable})">🔕 إيقاف التنبيه</button>
+                            </div>
+                        </div>
+                        <div style="font-size:0.7rem; color: #eee; margin-top:2px;">
+                            يرجى استلام الحساب أو فتح وقت جديد للزبون.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if(table.psActive && table.psStartTime) {
+                let timerSection = '';
+                let boxClass = 'ps-timer-box';
+
+                if (table.psIsLimit) {
+                    boxClass += ' is-limit';
+                    timerSection = `
+                        <div style="font-size:0.75rem; color:#f1c40f; font-weight:bold;">
+                            ⏳ الوقت المتبقي: <span style="font-family:monospace; font-size: 0.95rem;">${table.psTimeRemainingString}</span>
+                            <span style="color:#bbb; font-weight:normal;"> (محدد بـ ${table.psLimitMinutes} دقيقة)</span>
+                        </div>
+                    `;
+                }
+
+                statusBox.innerHTML = `
+                    <div class="${boxClass}">
+                        <div class="ps-timer-info">
+                            <div>
+                                <strong>🎮 وقت الـ PS4 (${table.psIsLimit ? 'محدد' : 'مفتوح'}):</strong>
+                                <span style="color:#3498db; font-size: 0.95rem; font-family: monospace; font-weight:bold; margin-right:3px;">${table.psTimeString}</span>
+                            </div>
+                            <div class="ps-timer-actions" style="display: flex; gap: 3px;">
+                                <button class="btn-edit-start-time" onclick="editActiveTimerStartTime()">✏️ تعديل البدء</button>
+                                <button class="btn-stop-ps" onclick="stopPsTimer()">إيقاف وحساب</button>
+                            </div>
+                        </div>
+                        ${timerSection}
+                        <div class="ps-time-log">
+                            <span>🛫 ${table.startClock}</span>
+                            <span>⏳ مستمر</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--success-color); font-weight:bold;">
+                            المبلغ المؤقت الحالي: ${roundToNearest250(table.psElapsedCost).toLocaleString()} د.ع
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusBox.innerHTML = '';
+            }
+        }
+
+        function changeQty(productId, change) {
+            const currentOrder = tablesData[activeTable].items;
+            const item = currentOrder.find(i => i.id === productId);
+            if(!item) return;
+
+            item.qty += change;
+            if(item.qty <= 0) {
+                tablesData[activeTable].items = currentOrder.filter(i => i.id !== productId);
+            }
+
+            saveToStorage();
+            renderTablesBar();
+            renderOrderList();
+        }
+
+        function settleIndividualItem(productId) {
+            checkAndResetAllPeriods();
+            const currentOrder = tablesData[activeTable].items;
+            const item = currentOrder.find(i => i.id === productId);
+            if(!item) return;
+
+            const itemTotal = roundToNearest250(item.price * item.qty);
+
+            if(confirm(`هل تريد استلام حساب "${item.name}" بقيمة (${itemTotal.toLocaleString()} د.ع) بشكل منفرد؟`)) {
+                
+                dailyTotalSales += itemTotal;
+                weeklyTotalSales += itemTotal;
+                monthlyTotalSales += itemTotal;
+                achievements.cumulativeSales += itemTotal; 
+
+                if (item.category === 'games') {
+                    dailyGameSales += itemTotal;
+                    weeklyGameSales += itemTotal;
+                    monthlyGameSales += itemTotal;
+                }
+
+                // حساب تراكم المياه المباعة يدوياً وبصورة منفردة
+                if (item.name === 'ماء') {
+                    achievements.waterBottlesSold += item.qty;
+                }
+
+                const isPsItem = item.category === 'games' && item.name.indexOf('وقت PS4') !== -1;
+                const statKey = isPsItem ? 'ps4_time' : String(item.id);
+                const statName = isPsItem ? '🎮 وقت PS4 (تشغيل)' : item.name;
+                trackProductSale(statKey, statName, item.qty, itemTotal);
+
+                let message = `💵 *استلام حساب منفرد - كيمز كوفي*\n`;
+                message += `▪️ طاولة رقم: ${activeTable}\n`;
+                message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
+                message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
+                message += `-------------------------\n`;
+                message += `▪️ المادة المستلمة: ${item.name} (عدد ${item.qty})\n`;
+                if(item.timeDetails) {
+                    message += `⏱️ التفاصيل: ${item.timeDetails}\n`;
+                }
+                message += `💰 المبلغ المستلم: *${itemTotal.toLocaleString()} د.ع*\n`;
+                message += `-------------------------\n`;
+                message += `📈 *دخل الصندوق اليومي الحالي: ${dailyTotalSales.toLocaleString()} د.ع*`;
+
+                pendingInvoices.push(message);
+
+                tablesData[activeTable].items = currentOrder.filter(i => i.id !== productId);
+
+                saveToStorage();
+                renderTablesBar();
+                renderOrderList();
+                updatePsTimerUI();
+                processPendingInvoices();
+                updateAchievementsUI();
+            }
+        }
+
+        function calculateTableSubtotal(tableId) {
+            let subtotal = tablesData[tableId].psElapsedCost || 0; 
+            tablesData[tableId].items.forEach(item => {
+                subtotal += (item.price * item.qty);
+            });
+            return subtotal;
+        }
+
+        function renderOrderList() {
+            const container = document.getElementById('order-list-container');
+            container.innerHTML = '';
+            
+            let subtotal = calculateTableSubtotal(activeTable);
+            let discount = tablesData[activeTable].discount || 0;
+            let finalTotal = subtotal - discount;
+            if (finalTotal < 0) finalTotal = 0;
+
+            finalTotal = roundToNearest250(finalTotal);
+
+            tablesData[activeTable].items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `
+                    <div class="item-details">
+                        <strong>${item.name}</strong> <small>(${item.price.toLocaleString()} د.ع)</small>
+                        ${item.timeDetails ? `<div style="font-size:0.68rem; color:#bbb; margin-top:2px;">${item.timeDetails}</div>` : ''}
+                    </div>
+                    <div class="item-actions">
+                        <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+                        <button class="pay-item-btn" onclick="settleIndividualItem(${item.id})">💵 استلام</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('total-price').innerText = finalTotal.toLocaleString() + ' د.ع';
+            
+            const discBox = document.getElementById('disc-box');
+            discBox.setAttribute('data-print-val', discount > 0 ? `مقدار الخصم: -${discount.toLocaleString()} د.ع` : 'الخصم: 0 د.ع');
+        }
+
+        function closeAndSaveInvoice() {
+            checkAndResetAllPeriods();
+            
+            let subtotal = calculateTableSubtotal(activeTable);
+            if(subtotal === 0 && !tablesData[activeTable].psActive) {
+                alert('الطاولة فارغة تماماً!');
+                return;
+            }
+
+            let discount = tablesData[activeTable].discount || 0;
+            let finalTotal = subtotal - discount;
+            if (finalTotal < 0) finalTotal = 0;
+
+            finalTotal = roundToNearest250(finalTotal);
+
+            if(confirm(`هل تريد تثبيت حساب طاولة ${activeTable} بمبلغ (${finalTotal.toLocaleString()} د.ع)؟`)) {
+                
+                dailyTotalSales += finalTotal;
+                dailyTotalDiscounts += discount;
+                weeklyTotalSales += finalTotal;
+                weeklyTotalDiscounts += discount;
+                monthlyTotalSales += finalTotal;
+                monthlyTotalDiscounts += discount;
+                
+                let gamesSum = 0;
+                if(tablesData[activeTable].psElapsedCost > 0) {
+                    const psDirectCost = roundToNearest250(tablesData[activeTable].psElapsedCost);
+                    gamesSum += psDirectCost;
+                    trackProductSale('ps4_time', '🎮 وقت PS4 (تشغيل)', 1, psDirectCost);
+                }
+                tablesData[activeTable].items.forEach(item => {
+                    if (item.category === 'games') {
+                        gamesSum += (item.price * item.qty);
+                    }
+                    // إضافة عدد المياه المباعة في الحساب المغلق للوحة المنجزات المحدثة
+                    if (item.name === 'ماء') {
+                        achievements.waterBottlesSold += item.qty;
+                    }
+
+                    const isPsItem = item.category === 'games' && item.name.indexOf('وقت PS4') !== -1;
+                    const statKey = isPsItem ? 'ps4_time' : String(item.id);
+                    const statName = isPsItem ? '🎮 وقت PS4 (تشغيل)' : item.name;
+                    trackProductSale(statKey, statName, item.qty, item.price * item.qty);
+                });
+
+                dailyGameSales += gamesSum;
+                weeklyGameSales += gamesSum;
+                monthlyGameSales += gamesSum;
+                achievements.cumulativeSales += finalTotal; 
+                achievements.todayClosedBillsCount += 1; 
+
+                // تسجيل الفاتورة بنظام الترقيم والقرعة (فقط للفواتير 10 آلاف دينار فأكثر)
+                const lotteryEntry = registerInvoiceForLottery(finalTotal, activeTable);
+                
+                let message = `🧾 *تثبيت حساب جديد - كيمز كوفي*\n`;
+                message += `▪️ طاولة رقم: ${activeTable}\n`;
+                message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
+                message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
+                if (lotteryEntry) {
+                    message += `🎟️ رقم الفاتورة (القرعة): *${lotteryEntry.number} / 100*\n`;
+                }
+                message += `-------------------------\n`;
+                
+                if(tablesData[activeTable].psElapsedCost > 0) {
+                    let label = tablesData[activeTable].psIsLimit ? `محدد بـ ${tablesData[activeTable].psLimitMinutes}د` : "مفتوح";
+                    message += `🎮 وقت PS4 ${label} (${tablesData[activeTable].psTimeString}): ${roundToNearest250(tablesData[activeTable].psElapsedCost).toLocaleString()} د.ع\n`;
+                    
+                    const elapsedMs = new Date().getTime() - tablesData[activeTable].psStartTime;
+                    achievements.psActiveMinutes += Math.floor(elapsedMs / (1000 * 60));
+                }
+                
+                tablesData[activeTable].items.forEach(item => {
+                    message += `▪️ ${item.name} (عدد ${item.qty}): ${(item.price * item.qty).toLocaleString()} د.ع\n`;
+                    if(item.timeDetails) {
+                        message += `   ⏱️ ${item.timeDetails}\n`;
+                    }
+                });
+                
+                message += `-------------------------\n`;
+                if(discount > 0) {
+                    message += `🔻 الخصم الممنوح: -${discount.toLocaleString()} د.ع\n`;
+                    message += `-------------------------\n`;
+                }
+                message += `💰 *المجموع النهائي لطاولة ${activeTable}: ${finalTotal.toLocaleString()} د.ع*\n\n`;
+                message += `📈 *إجمالي دخل الصندوق اليومي: ${dailyTotalSales.toLocaleString()} د.ع*\n`;
+                message += `🎮 *أرباح البلي والجيم والـ PS لليوم: ${dailyGameSales.toLocaleString()} د.ع*\n`;
+                message += `📉 *إجمالي خصومات الصندوق اليومي: ${dailyTotalDiscounts.toLocaleString()} د.ع*`;
+
+                pendingInvoices.push(message);
+
+                // طباعة الفاتورة الرسمية تلقائياً (مع رقمها إن وجد) قبل تصفير بيانات الطاولة - محاولة بدون التأثير على إتمام تثبيت الحساب حتى لو فشلت الطباعة
+                try {
+                    printFinalizedReceipt(lotteryEntry ? lotteryEntry.number : null);
+                } catch (e) {
+                    console.error('تعذرت الطباعة التلقائية عند تثبيت الحساب:', e);
+                }
+
+                tablesData[activeTable] = { 
+                    items: [], 
+                    psActive: false, 
+                    psStartTime: null, 
+                    psElapsedCost: 0, 
+                    psTimeString: '00:00:00', 
+                    startClock: '', 
+                    stopClock: '', 
+                    discount: 0,
+                    psIsLimit: false,
+                    psLimitMinutes: 0,
+                    psTimeRemainingString: '00:00:00',
+                    alarmTriggered: false
+                };
+                
+                document.getElementById('discount-field').value = '';
+                
+                saveToStorage();
+                renderTablesBar();
+                renderOrderList();
+                updatePsTimerUI();
+                checkActiveAlarms();
+                updateAchievementsUI();
+
+                processPendingInvoices();
+            }
+        }
+
+        let isProcessing = false;
+        function processPendingInvoices() {
+            if (isProcessing || pendingInvoices.length === 0 || !navigator.onLine) return;
+            isProcessing = true;
+
+            const nextInvoice = pendingInvoices[0];
+            const url = `https://api.telegram.org/bot${getTelegramToken()}/sendMessage`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: getTelegramChatId(),
+                    text: nextInvoice,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(res => {
+                if(res.ok) {
+                    sendToWhatsAppIfConfigured(nextInvoice);
+                    pendingInvoices.shift();
+                    saveToStorage();
+                    isProcessing = false;
+                    updateNetworkStatusUI();
+                    processPendingInvoices();
+                } else {
+                    isProcessing = false;
+                }
+            })
+            .catch(err => {
+                console.error("خطأ بالإرسال:", err);
+                isProcessing = false;
+            });
+        }
+
+        // ============ نظام الطباعة الحرارية المباشرة عبر بلوتوث (بدون أي برنامج وسيط) ============
+        let printerPort = null;
+
+        function getPaperConfig() {
+            const mode = localStorage.getItem('cafe_printer_paper_v9') || '58mm';
+            return mode === '80mm' ? { widthPx: 576, marginPx: 16 } : { widthPx: 384, marginPx: 10 };
+        }
+
+        function getPrinterBaud() {
+            return parseInt(localStorage.getItem('cafe_printer_baud_v9')) || 9600;
+        }
+
+        // معامل تكبير/تصغير خط الفاتورة المطبوعة (صغير/متوسط/كبير)
+        function getPrinterFontScale() {
+            const mode = localStorage.getItem('cafe_printer_font_v9') || 'medium';
+            if (mode === 'small') return 0.82;
+            if (mode === 'large') return 1.22;
+            return 1;
+        }
+
+        function updatePrinterPaperSetting(val) {
+            localStorage.setItem('cafe_printer_paper_v9', val);
+        }
+
+        function updatePrinterBaudSetting(val) {
+            localStorage.setItem('cafe_printer_baud_v9', val);
+        }
+
+        function updatePrinterFontSetting(val) {
+            localStorage.setItem('cafe_printer_font_v9', val);
+        }
+
+        function getPrinterMode() {
+            return localStorage.getItem('cafe_printer_mode_v9') || 'auto';
+        }
+
+        function updatePrinterModeSetting(val) {
+            localStorage.setItem('cafe_printer_mode_v9', val);
+        }
+
+        function updatePrinterStatusUI(connected) {
+            const el = document.getElementById('printer-status-text');
+            if (!el) return;
+            el.innerText = connected ? '✅ الطابعة مقترنة وجاهزة' : '❌ غير مقترنة بعد';
+            el.style.color = connected ? 'var(--success-color)' : 'var(--danger-color)';
+        }
+
+        // فتح/إغلاق مودال إعدادات الطابعة - بدون أي رمز سري، عشان يكون سريع الوصول كل مرة تحتاج تقرن أو تعدل الطابعة
+        function openPrinterSettingsModal() {
+            document.getElementById('printer-settings-modal').style.display = 'flex';
+            refreshPrinterStatusOnOpen();
+        }
+
+        function closePrinterSettingsModal() {
+            document.getElementById('printer-settings-modal').style.display = 'none';
+        }
+
+        async function refreshPrinterStatusOnOpen() {
+            const warningEl = document.getElementById('printer-compat-warning');
+            const paperSelect = document.getElementById('setting-printer-paper');
+            const baudSelect = document.getElementById('setting-printer-baud');
+            const fontSelect = document.getElementById('setting-printer-font');
+            const modeSelect = document.getElementById('setting-printer-mode');
+            if (paperSelect) paperSelect.value = localStorage.getItem('cafe_printer_paper_v9') || '58mm';
+            if (baudSelect) baudSelect.value = String(getPrinterBaud());
+            if (fontSelect) fontSelect.value = localStorage.getItem('cafe_printer_font_v9') || 'medium';
+            if (modeSelect) modeSelect.value = getPrinterMode();
+
+            if (!('serial' in navigator)) {
+                if (warningEl) warningEl.style.display = 'block';
+                updatePrinterStatusUI(false);
+                return;
+            }
+            if (warningEl) warningEl.style.display = 'none';
+
+            try {
+                const ports = await navigator.serial.getPorts();
+                updatePrinterStatusUI(ports.length > 0);
+            } catch (e) {
+                updatePrinterStatusUI(false);
+            }
+        }
+
+        // إقران الطابعة يدوياً من الإعدادات (مرة وحدة فقط، وبعدها تتذكرها المتصفح تلقائياً)
+        async function connectPrinterManually() {
+            if (!('serial' in navigator)) {
+                alert("متصفح Chrome عندك ما يدعم الطباعة المباشرة. حدّثه من متجر Google Play لآخر إصدار وحاول مرة ثانية.");
+                return;
+            }
+            try {
+                if (printerPort) {
+                    try { await printerPort.close(); } catch (e) {}
+                    printerPort = null;
+                }
+                // نعرض كل الأجهزة المقرونة بدون تصفية (بعض الطابعات المجهولة الماركة ما تعلن بروفايل SPP بالشكل القياسي)
+                try {
+                    printerPort = await navigator.serial.requestPort();
+                } catch (openListErr) {
+                    // إذا فشلت القائمة المفتوحة لأي سبب، نجرب فلتر SPP القياسي كخيار احتياطي
+                    printerPort = await navigator.serial.requestPort({
+                        filters: [{ bluetoothServiceClassId: 0x1101 }]
+                    });
+                }
+                await printerPort.open({ baudRate: getPrinterBaud() });
+                updatePrinterStatusUI(true);
+                alert("تم إقران الطابعة بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
+            } catch (e) {
+                console.error('فشل إقران الطابعة:', e);
+                updatePrinterStatusUI(false);
+                alert("ما كدرنا نقرن الطابعة أو ما لقينا أي جهاز.\n\nتأكد من:\n1) الطابعة مفعّلة (شغالة) وقريبة من الجهاز.\n2) الطابعة مقرونة (Paired) مسبقاً من إعدادات بلوتوث الجهاز نفسه (خارج التطبيق) - هذا شرط أساسي.\n3) بلوتوث الجهاز مفعّل.\n\nوحاول مرة ثانية.");
+            }
+        }
+
+        // يحاول الاتصال تلقائياً بطابعة سبق إقرانها، وإلا يطلب من المستخدم يختارها
+        async function ensurePrinterPort() {
+            if (!('serial' in navigator)) {
+                throw new Error('NO_SERIAL_API');
+            }
+            if (printerPort && printerPort.readable) {
+                return printerPort;
+            }
+            try {
+                const existingPorts = await navigator.serial.getPorts();
+                if (existingPorts.length > 0) {
+                    printerPort = existingPorts[0];
+                    if (!printerPort.readable) {
+                        await printerPort.open({ baudRate: getPrinterBaud() });
+                    }
+                    return printerPort;
+                }
+            } catch (e) { /* نتابع لطلب إقران جديد */ }
+
+            try {
+                printerPort = await navigator.serial.requestPort();
+            } catch (openListErr) {
+                printerPort = await navigator.serial.requestPort({
+                    filters: [{ bluetoothServiceClassId: 0x1101 }]
+                });
+            }
+            await printerPort.open({ baudRate: getPrinterBaud() });
+            return printerPort;
+        }
+
+        // رسم الفاتورة كصورة بيضاء/سوداء بعرض ورق الطابعة الحرارية بالضبط
+        function buildReceiptCanvas(invoiceNumber) {
+            const { widthPx, marginPx } = getPaperConfig();
+            const table = tablesData[activeTable];
+            const subtotal = calculateTableSubtotal(activeTable);
+            const discount = table.discount || 0;
+            let finalTotal = subtotal - discount;
+            if (finalTotal < 0) finalTotal = 0;
+            finalTotal = roundToNearest250(finalTotal);
+
+            const fontScale = getPrinterFontScale();
+            const baseFont = Math.round(widthPx * 0.062 * fontScale);
+            const smallFont = Math.round(baseFont * 0.72);
+            const titleFont = Math.round(baseFont * 1.35);
+            const lineH = Math.round(baseFont * 1.35);
+
+            let estimatedLines = 10;
+            table.items.forEach(it => { estimatedLines += it.timeDetails ? 2 : 1; });
+            if (table.psElapsedCost > 0) estimatedLines += 1;
+            const roughCanvas = document.createElement('canvas');
+            roughCanvas.width = widthPx;
+            roughCanvas.height = estimatedLines * lineH + 200;
+
+            const ctx = roughCanvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, roughCanvas.width, roughCanvas.height);
+            ctx.fillStyle = '#000000';
+            ctx.direction = 'rtl';
+
+            const rightX = widthPx - marginPx;
+            const leftX = marginPx;
+            let y = marginPx + titleFont;
+
+            function drawCenter(text, size, bold) {
+                ctx.font = `${bold ? 'bold ' : ''}${size}px Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText(text, widthPx / 2, y);
+                y += Math.round(size * 1.35);
+            }
+            function drawRow(rightText, leftText, size, bold) {
+                ctx.font = `${bold ? 'bold ' : ''}${size}px Arial, sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.fillText(rightText, rightX, y);
+                if (leftText) {
+                    ctx.textAlign = 'left';
+                    ctx.fillText(leftText, leftX, y);
+                }
+                y += Math.round(size * 1.35);
+            }
+            function drawSmallLine(text) {
+                ctx.font = `${Math.round(smallFont * 0.9)}px Arial, sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.fillText(text, rightX, y);
+                y += Math.round(smallFont * 1.1);
+            }
+            function drawDashedLine() {
+                y += Math.round(lineH * 0.15);
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(leftX, y);
+                ctx.lineTo(rightX, y);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.setLineDash([]);
+                y += Math.round(lineH * 0.45);
+            }
+
+            drawCenter('كيمز كوفي', titleFont, true);
+            drawCenter("GAME'S COFFEE", smallFont, false);
+            y += Math.round(lineH * 0.15);
+            if (invoiceNumber) {
+                drawCenter(`🎟️ رقم الفاتورة: ${invoiceNumber} / 100`, Math.round(baseFont * 1.05), true);
+            }
+            drawDashedLine();
+
+            const now = new Date();
+            drawRow(`طاولة رقم: ${activeTable}`, '', baseFont, true);
+            drawRow(now.toLocaleDateString('ar-EG'), formatTimeClock(now.getTime()), smallFont, false);
+            drawDashedLine();
+
+            if (table.psElapsedCost > 0) {
+                const label = table.psIsLimit ? `محدد ${table.psLimitMinutes}د` : 'مفتوح';
+                drawRow(`وقت PS4 (${label}) ${table.psTimeString}`, `${roundToNearest250(table.psElapsedCost).toLocaleString()} د.ع`, smallFont, false);
+            }
+
+            table.items.forEach(item => {
+                const lineTotal = (item.price * item.qty).toLocaleString();
+                drawRow(`${item.name} × ${item.qty}`, `${lineTotal} د.ع`, baseFont, false);
+                if (item.timeDetails) {
+                    drawSmallLine(item.timeDetails);
+                }
+            });
+
+            drawDashedLine();
+            if (discount > 0) {
+                drawRow('الخصم:', `-${discount.toLocaleString()} د.ع`, baseFont, false);
+            }
+            drawRow('المجموع الكلي:', `${finalTotal.toLocaleString()} د.ع`, Math.round(baseFont * 1.25), true);
+            drawDashedLine();
+            drawCenter('شكراً لزيارتكم 🙏', smallFont, false);
+            y += Math.round(lineH * 0.5);
+
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = widthPx;
+            finalCanvas.height = y + marginPx;
+            const fctx = finalCanvas.getContext('2d');
+            fctx.fillStyle = '#ffffff';
+            fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            fctx.drawImage(roughCanvas, 0, 0);
+
+            return finalCanvas;
+        }
+
+        // تحويل صورة الفاتورة لأوامر طباعة حرارية (ESC/POS raster) مجزأة لمقاطع صغيرة
+        function canvasToEscPosRaster(canvas) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const imgData = ctx.getImageData(0, 0, w, h).data;
+            const widthBytes = w / 8;
+
+            const bits = new Uint8Array(widthBytes * h);
+            for (let yy = 0; yy < h; yy++) {
+                for (let xx = 0; xx < w; xx++) {
+                    const idx = (yy * w + xx) * 4;
+                    const luminance = imgData[idx] * 0.299 + imgData[idx + 1] * 0.587 + imgData[idx + 2] * 0.114;
+                    const alpha = imgData[idx + 3];
+                    if (alpha > 100 && luminance < 160) {
+                        const byteIndex = yy * widthBytes + (xx >> 3);
+                        const bitIndex = 7 - (xx % 8);
+                        bits[byteIndex] |= (1 << bitIndex);
+                    }
+                }
+            }
+
+            const chunks = [new Uint8Array([0x1B, 0x40])]; // ESC @ تهيئة الطابعة
+
+            const maxRowsPerChunk = 200;
+            for (let startRow = 0; startRow < h; startRow += maxRowsPerChunk) {
+                const rows = Math.min(maxRowsPerChunk, h - startRow);
+                const header = new Uint8Array([
+                    0x1D, 0x76, 0x30, 0x00,
+                    widthBytes & 0xFF, (widthBytes >> 8) & 0xFF,
+                    rows & 0xFF, (rows >> 8) & 0xFF
+                ]);
+                const dataSlice = bits.slice(startRow * widthBytes, (startRow + rows) * widthBytes);
+                chunks.push(header, dataSlice);
+            }
+
+            chunks.push(new Uint8Array([0x1B, 0x64, 0x04])); // تغذية ورق لترك مسافة قص يدوي
+
+            const totalLen = chunks.reduce((sum, c) => sum + c.length, 0);
+            const finalBuffer = new Uint8Array(totalLen);
+            let offset = 0;
+            chunks.forEach((c) => { finalBuffer.set(c, offset); offset += c.length; });
+            return finalBuffer;
+        }
+
+        // زر "🖨️ طباعة" الرئيسي: يطبع مباشرة على الطابعة الحرارية بلمسة وحدة، إلا إذا كان وضع الطباعة مضبوط على "نافذة الطباعة العادية دائماً"
+        async function printOrderDirect() {
+            const subtotal = calculateTableSubtotal(activeTable);
+            if (subtotal === 0) {
+                alert('الطاولة فارغة، ما في شي للطباعة!');
+                return;
+            }
+
+            if (getPrinterMode() === 'system' || !('serial' in navigator)) {
+                // إما المستخدم اختار "نافذة الطباعة العادية دائماً" (موصى به مع RawBT على أندرويد)،
+                // أو المتصفح أصلاً ما يدعم الطباعة المباشرة
+                window.print();
+                return;
+            }
+
+            try {
+                const canvas = buildReceiptCanvas(null);
+                const escposData = canvasToEscPosRaster(canvas);
+
+                const port = await ensurePrinterPort();
+                const writer = port.writable.getWriter();
+                await writer.write(escposData);
+                writer.releaseLock();
+                updatePrinterStatusUI(true);
+            } catch (err) {
+                console.error('خطأ الطباعة المباشرة:', err);
+                updatePrinterStatusUI(false);
+                if (confirm('ما كدرنا نطبع مباشرة على الطابعة الحرارية. تأكد إنها مفعّلة وقريبة ومقرونة (من زر 🖨️ الطابعة بالأعلى).\n\nهل تريد فتح نافذة الطباعة العادية بدلاً عنها؟')) {
+                    window.print();
+                }
+            }
+        }
+
+        // طباعة الفاتورة الرسمية النهائية تلقائياً عند تثبيت الحساب (مع رقمها إن وجد) - بدون مقاطعة عملية الإغلاق حتى لو فشلت
+        async function printFinalizedReceipt(invoiceNumber) {
+            if (getPrinterMode() === 'system') {
+                // المستخدم اختار "نافذة الطباعة العادية دائماً" - نفتحها هنا أيضاً حسب اختياره
+                if ('print' in window) window.print();
+                return;
+            }
+            if (!('serial' in navigator)) return;
+            try {
+                const canvas = buildReceiptCanvas(invoiceNumber);
+                const escposData = canvasToEscPosRaster(canvas);
+                const port = await ensurePrinterPort();
+                const writer = port.writable.getWriter();
+                await writer.write(escposData);
+                writer.releaseLock();
+                updatePrinterStatusUI(true);
+            } catch (err) {
+                console.error('تعذرت الطباعة التلقائية للفاتورة النهائية:', err);
+                updatePrinterStatusUI(false);
+            }
+        }
+        // ============ نهاية نظام الطباعة الحرارية المباشرة ============
+
+        function printOrder() {
+            let subtotal = calculateTableSubtotal(activeTable);
+            if(subtotal === 0) return;
+            window.print();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('settings-modal');
+            if (event.target == modal) {
+                closeSettingsModal();
+            }
+            const printerModal = document.getElementById('printer-settings-modal');
+            if (event.target == printerModal) {
+                closePrinterSettingsModal();
+            }
+        }
+
+        checkLicenseStatus();
+        applyThemeColor(customThemeColor);
+        checkAndResetAllPeriods();
+        renderDynamicMenu();
+        renderTablesBar();
+        renderOrderList();
+        updateNetworkStatusUI();
+
+        // تسجيل الـ Service Worker لتفعيل التثبيت على الشاشة الرئيسية والعمل أوفلاين
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').catch((err) => {
+                    console.error('فشل تسجيل service worker:', err);
+                });
+            });
+        }
+
+        // زر تثبيت التطبيق التلقائي (يظهر لما أندرويد/كروم يسمح بالتثبيت المباشر)
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            const installBtn = document.createElement('button');
+            installBtn.innerText = '⬇️ تثبيت التطبيق على الجهاز';
+            installBtn.style.cssText = 'position:fixed;bottom:8px;left:8px;right:8px;z-index:2000;background:#f39c12;color:#000;border:none;padding:10px;border-radius:8px;font-weight:bold;font-size:0.85rem;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.5);';
+            installBtn.onclick = async () => {
+                installBtn.remove();
+                if (deferredInstallPrompt) {
+                    deferredInstallPrompt.prompt();
+                    await deferredInstallPrompt.userChoice;
+                    deferredInstallPrompt = null;
+                }
+            };
+            document.body.appendChild(installBtn);
+        });
+    </script>
+</body>
+</html>
