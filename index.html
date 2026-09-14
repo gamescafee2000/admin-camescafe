@@ -555,6 +555,15 @@
         #license-status-msg { font-size: 0.75rem; margin-top: 8px; min-height: 1em; }
         #license-status-msg.error { color: var(--danger-color); }
         #license-status-msg.ok { color: var(--success-color); }
+        #license-contact-box { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: none; }
+        #license-contact-box p { margin: 0 0 6px 0; font-size: 0.72rem; color: #aaa; }
+        #license-contact-box a {
+            display: inline-block; margin: 3px 4px; padding: 7px 12px; border-radius: 6px;
+            font-size: 0.75rem; text-decoration: none; font-weight: bold;
+        }
+        #license-contact-box a.whatsapp { background: #25D366; color: #000; }
+        #license-contact-box a.instagram { background: #E1306C; color: #fff; }
+        #license-contact-box a.website { background: #3498db; color: #fff; }
         #license-expiry-banner {
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 4000;
             background: var(--danger-color); color: #fff; text-align: center;
@@ -571,6 +580,7 @@
             <input type="text" id="license-key-input" placeholder="KIMS-XXXX-XXXX-XXXX" autocomplete="off" onkeydown="if(event.key==='Enter') submitLicenseKey()">
             <button class="license-btn" id="license-verify-btn" onclick="submitLicenseKey()">تفعيل</button>
             <p id="license-status-msg"></p>
+            <div id="license-contact-box"></div>
         </div>
     </div>
     <div id="license-expiry-banner"></div>
@@ -956,8 +966,10 @@
                         </select>
                     </div>
 
-                    <button class="btn-add-item" style="background-color: #2980b9;" onclick="connectPrinterManually()">🔗 إقران / تغيير الطابعة</button>
-                    <p id="printer-compat-warning" style="font-size: 0.68rem; color: var(--danger-color); margin-top: 8px; margin-bottom: 0; display:none;">⚠️ متصفح Chrome عندك قديم وما يدعم الطباعة المباشرة. حدّثه من متجر Google Play (يحتاج Chrome 138 أو أحدث) وحاول مرة ثانية.</p>
+                    <button class="btn-add-item" id="btn-connect-bt" style="background-color: #2980b9;" onclick="connectPrinterBluetooth()">📶 إقران عبر بلوتوث</button>
+                    <button class="btn-add-item" id="btn-connect-usb" style="background-color: #16a085; margin-top: 4px;" onclick="connectPrinterUSB()">🔌 إقران عبر USB</button>
+                    <p style="font-size: 0.66rem; color: #ccc; margin: 6px 0 0 0;">اختر الطريقة المناسبة لطابعتك: بلوتوث إذا كانت لاسلكية ومقرونة مسبقاً من إعدادات الجهاز، أو USB إذا كانت موصولة بسلك.</p>
+                    <p id="printer-compat-warning" style="font-size: 0.68rem; color: var(--danger-color); margin-top: 8px; margin-bottom: 0; display:none;">⚠️ متصفح Chrome عندك قديم وما يدعم أي طريقة طباعة مباشرة (لا بلوتوث ولا USB). حدّثه من متجر Google Play لآخر إصدار وحاول مرة ثانية، أو استخدم "نافذة الطباعة العادية" مع تطبيق RawBT.</p>
                 </div>
             </div>
         </div>
@@ -966,7 +978,7 @@
     <script>
         // ============ نظام الاشتراك السنوي (License Gate) ============
         // غيّر هذا الرابط لرابط سيرفر التفعيل بعد ما تنشره (شوف مجلد kims-license-server)
-        const LICENSE_SERVER_URL = "https://YOUR-LICENSE-SERVER-URL.onrender.com";
+        const LICENSE_SERVER_URL = "https://admin-casher.onrender.com";
         const LICENSE_KEY_STORAGE = 'kims_license_key_v1';
         const DEVICE_ID_STORAGE = 'kims_device_id_v1';
         const LICENSE_EXPIRES_STORAGE = 'kims_license_expires_at_v1';
@@ -992,10 +1004,37 @@
             return res.json();
         }
 
+        // معلومات التواصل تبع صاحب البرنامج (واتساب/انستغرام/رابط) - تنجلب من نفس سيرفر التفعيل
+        // وتظهر بشاشة القفل حتى يگدر صاحب المحل يتواصل ياك بسهولة لو احتاج تفعيل أو تجديد
+        let cachedContactInfo = null;
+        function renderContactBox(info) {
+            const box = document.getElementById('license-contact-box');
+            if (!box) return;
+            if (!info || (!info.whatsapp && !info.instagram && !info.website)) {
+                box.style.display = 'none';
+                return;
+            }
+            let html = '<p>تحتاج مساعدة أو تفعيل/تجديد الاشتراك؟ تواصل وياي:</p>';
+            if (info.whatsapp) html += `<a class="whatsapp" href="https://wa.me/${info.whatsapp}" target="_blank" rel="noopener">📱 واتساب</a>`;
+            if (info.instagram) html += `<a class="instagram" href="${info.instagram}" target="_blank" rel="noopener">📸 انستغرام</a>`;
+            if (info.website) html += `<a class="website" href="${info.website}" target="_blank" rel="noopener">🔗 رابط</a>`;
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+        async function loadContactInfoIntoGate() {
+            if (cachedContactInfo) { renderContactBox(cachedContactInfo); return; }
+            try {
+                const res = await fetch(`${LICENSE_SERVER_URL}/api/contact-info`);
+                cachedContactInfo = await res.json();
+                renderContactBox(cachedContactInfo);
+            } catch (e) { /* ما مشكلة إذا ما توفر نت، بس ما تظهر معلومات التواصل هذي المرة */ }
+        }
+
         function showLicenseGate(msg, isError) {
             document.getElementById('license-gate-overlay').classList.remove('hidden');
             const msgEl = document.getElementById('license-status-msg');
             if (msg) { msgEl.textContent = msg; msgEl.className = isError ? 'error' : ''; }
+            loadContactInfoIntoGate();
         }
         function hideLicenseGate() {
             document.getElementById('license-gate-overlay').classList.add('hidden');
@@ -3060,8 +3099,10 @@
             });
         }
 
-        // ============ نظام الطباعة الحرارية المباشرة عبر بلوتوث (بدون أي برنامج وسيط) ============
-        let printerPort = null;
+        // ============ نظام الطباعة الحرارية المباشرة (بلوتوث أو USB، حسب الطابعة - بدون أي برنامج وسيط) ============
+        let printerPort = null;        // Web Serial (بلوتوث كلاسيك SPP، أو USB-Serial على الكمبيوتر)
+        let usbPrinterDevice = null;   // WebUSB (طابعات USB مباشرة على أندرويد/كمبيوتر)
+        let usbPrinterEndpoint = null;
 
         function getPaperConfig() {
             const mode = localStorage.getItem('cafe_printer_paper_v9') || '58mm';
@@ -3100,6 +3141,14 @@
             localStorage.setItem('cafe_printer_mode_v9', val);
         }
 
+        // آخر طريقة اتصال نجحت (بلوتوث أو USB) - نحاول نفس الطريقة أول شي بالمرة الجاية
+        function getPrinterTransport() {
+            return localStorage.getItem('cafe_printer_transport_v9') || null;
+        }
+        function setPrinterTransport(val) {
+            localStorage.setItem('cafe_printer_transport_v9', val);
+        }
+
         function updatePrinterStatusUI(connected) {
             const el = document.getElementById('printer-status-text');
             if (!el) return;
@@ -3128,7 +3177,14 @@
             if (fontSelect) fontSelect.value = localStorage.getItem('cafe_printer_font_v9') || 'medium';
             if (modeSelect) modeSelect.value = getPrinterMode();
 
-            if (!('serial' in navigator)) {
+            const hasSerial = ('serial' in navigator);
+            const hasUsb = ('usb' in navigator);
+            const btBtn = document.getElementById('btn-connect-bt');
+            const usbBtn = document.getElementById('btn-connect-usb');
+            if (btBtn) btBtn.style.display = hasSerial ? 'block' : 'none';
+            if (usbBtn) usbBtn.style.display = hasUsb ? 'block' : 'none';
+
+            if (!hasSerial && !hasUsb) {
                 if (warningEl) warningEl.style.display = 'block';
                 updatePrinterStatusUI(false);
                 return;
@@ -3136,17 +3192,25 @@
             if (warningEl) warningEl.style.display = 'none';
 
             try {
-                const ports = await navigator.serial.getPorts();
-                updatePrinterStatusUI(ports.length > 0);
+                let connected = false;
+                if (hasSerial) {
+                    const ports = await navigator.serial.getPorts();
+                    if (ports.length > 0) connected = true;
+                }
+                if (!connected && hasUsb) {
+                    const devices = await navigator.usb.getDevices();
+                    if (devices.length > 0) connected = true;
+                }
+                updatePrinterStatusUI(connected);
             } catch (e) {
                 updatePrinterStatusUI(false);
             }
         }
 
-        // إقران الطابعة يدوياً من الإعدادات (مرة وحدة فقط، وبعدها تتذكرها المتصفح تلقائياً)
-        async function connectPrinterManually() {
+        // إقران طابعة بلوتوث (SPP) يدوياً من الإعدادات - مرة وحدة، وبعدها تتذكرها المتصفح تلقائياً
+        async function connectPrinterBluetooth() {
             if (!('serial' in navigator)) {
-                alert("متصفح Chrome عندك ما يدعم الطباعة المباشرة. حدّثه من متجر Google Play لآخر إصدار وحاول مرة ثانية.");
+                alert("متصفح الجهاز ما يدعم الاتصال المباشر بالبلوتوث. جرب خيار USB بالأسفل، أو حدّث Chrome لآخر إصدار.");
                 return;
             }
             try {
@@ -3154,7 +3218,6 @@
                     try { await printerPort.close(); } catch (e) {}
                     printerPort = null;
                 }
-                // نعرض كل الأجهزة المقرونة بدون تصفية (بعض الطابعات المجهولة الماركة ما تعلن بروفايل SPP بالشكل القياسي)
                 try {
                     printerPort = await navigator.serial.requestPort();
                 } catch (openListErr) {
@@ -3164,43 +3227,134 @@
                     });
                 }
                 await printerPort.open({ baudRate: getPrinterBaud() });
+                setPrinterTransport('bt-serial');
                 updatePrinterStatusUI(true);
-                alert("تم إقران الطابعة بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
+                alert("تم إقران الطابعة عبر البلوتوث بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
             } catch (e) {
-                console.error('فشل إقران الطابعة:', e);
+                console.error('فشل إقران الطابعة عبر البلوتوث:', e);
                 updatePrinterStatusUI(false);
-                alert("ما كدرنا نقرن الطابعة أو ما لقينا أي جهاز.\n\nتأكد من:\n1) الطابعة مفعّلة (شغالة) وقريبة من الجهاز.\n2) الطابعة مقرونة (Paired) مسبقاً من إعدادات بلوتوث الجهاز نفسه (خارج التطبيق) - هذا شرط أساسي.\n3) بلوتوث الجهاز مفعّل.\n\nوحاول مرة ثانية.");
+                alert("ما كدرنا نقرن الطابعة عبر البلوتوث.\n\nتأكد من:\n1) الطابعة مفعّلة (شغالة) وقريبة من الجهاز.\n2) الطابعة مقرونة (Paired) مسبقاً من إعدادات بلوتوث الجهاز نفسه (خارج التطبيق) - هذا شرط أساسي.\n3) بلوتوث الجهاز مفعّل، وصلاحية 'الأجهزة القريبة' ممنوحة للمتصفح/التطبيق من إعدادات أندرويد.\n\nوحاول مرة ثانية، أو جرب خيار USB بالأسفل لو طابعتك توصل بسلك.");
             }
         }
 
-        // يحاول الاتصال تلقائياً بطابعة سبق إقرانها، وإلا يطلب من المستخدم يختارها
-        async function ensurePrinterPort() {
-            if (!('serial' in navigator)) {
-                throw new Error('NO_SERIAL_API');
-            }
-            if (printerPort && printerPort.readable) {
-                return printerPort;
+        // إقران طابعة USB يدوياً من الإعدادات - يشتغل على أغلب طابعات USB الحرارية بدون أي درايفر
+        async function connectPrinterUSB() {
+            if (!('usb' in navigator)) {
+                alert("متصفح الجهاز ما يدعم الاتصال المباشر عبر USB. جرب خيار البلوتوث بالأعلى، أو حدّث Chrome لآخر إصدار.");
+                return;
             }
             try {
-                const existingPorts = await navigator.serial.getPorts();
-                if (existingPorts.length > 0) {
-                    printerPort = existingPorts[0];
-                    if (!printerPort.readable) {
-                        await printerPort.open({ baudRate: getPrinterBaud() });
-                    }
-                    return printerPort;
+                if (usbPrinterDevice) {
+                    try { await usbPrinterDevice.close(); } catch (e) {}
+                    usbPrinterDevice = null;
+                    usbPrinterEndpoint = null;
                 }
-            } catch (e) { /* نتابع لطلب إقران جديد */ }
+                const device = await navigator.usb.requestDevice({ filters: [] });
+                await openAndClaimUsbPrinter(device);
+                setPrinterTransport('usb');
+                updatePrinterStatusUI(true);
+                alert("تم إقران الطابعة عبر USB بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
+            } catch (e) {
+                console.error('فشل إقران الطابعة عبر USB:', e);
+                updatePrinterStatusUI(false);
+                alert("ما كدرنا نقرن الطابعة عبر USB.\n\nتأكد من:\n1) الطابعة موصولة بسلك USB مباشرة بالجهاز (أو عبر كيبل OTG لو الجهاز موبايل/تابلت).\n2) الطابعة مشغّلة (فيها طاقة).\n\nوحاول مرة ثانية، أو جرب خيار البلوتوث بالأعلى لو طابعتك تدعم بلوتوث.");
+            }
+        }
+
+        // يفتح جهاز USB ويحدد أول واجهة فيها منفذ إرسال (bulk OUT) - يشتغل مع أغلب طابعات ESC/POS
+        // بدون الحاجة لمعرفة رقم الواجهة أو المنفذ مسبقاً (يكتشفهم تلقائياً)
+        async function openAndClaimUsbPrinter(device) {
+            await device.open();
+            if (device.configuration === null) {
+                await device.selectConfiguration(1);
+            }
+            let interfaceNumber = null;
+            let endpointNumber = null;
+            for (const iface of device.configuration.interfaces) {
+                for (const alt of iface.alternates) {
+                    const outEp = alt.endpoints.find(e => e.direction === 'out');
+                    if (outEp) {
+                        interfaceNumber = iface.interfaceNumber;
+                        endpointNumber = outEp.endpointNumber;
+                        break;
+                    }
+                }
+                if (interfaceNumber !== null) break;
+            }
+            if (interfaceNumber === null) {
+                throw new Error('NO_OUT_ENDPOINT');
+            }
+            await device.claimInterface(interfaceNumber);
+            usbPrinterDevice = device;
+            usbPrinterEndpoint = endpointNumber;
+        }
+
+        // يحاول الاتصال تلقائياً بطابعة سبق إقرانها (بلوتوث أو USB)، ويرجع كائن فيه دالة write() موحدة
+        // بغض النظر عن طريقة الاتصال، حتى تبقى بقية الكود (بناء الفاتورة وطباعتها) موحدة لكل الطابعات
+        async function ensurePrinterConnection() {
+            const preferred = getPrinterTransport();
+            const hasSerial = ('serial' in navigator);
+            const hasUsb = ('usb' in navigator);
+
+            // إعادة استخدام اتصال مفتوح أصلاً بهذه الجلسة
+            if (printerPort && printerPort.readable) {
+                return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
+            }
+            if (usbPrinterDevice) {
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            // محاولة إعادة الاتصال التلقائي بآخر طابعة مقرونة، بالترتيب المفضل المحفوظ
+            const tryReconnectSerial = async () => {
+                if (!hasSerial) return false;
+                const existingPorts = await navigator.serial.getPorts();
+                if (existingPorts.length === 0) return false;
+                printerPort = existingPorts[0];
+                if (!printerPort.readable) await printerPort.open({ baudRate: getPrinterBaud() });
+                setPrinterTransport('bt-serial');
+                return true;
+            };
+            const tryReconnectUsb = async () => {
+                if (!hasUsb) return false;
+                const existingDevices = await navigator.usb.getDevices();
+                if (existingDevices.length === 0) return false;
+                await openAndClaimUsbPrinter(existingDevices[0]);
+                setPrinterTransport('usb');
+                return true;
+            };
 
             try {
-                printerPort = await navigator.serial.requestPort();
-            } catch (openListErr) {
-                printerPort = await navigator.serial.requestPort({
-                    filters: [{ bluetoothServiceClassId: 0x1101 }]
-                });
+                if (preferred === 'usb') {
+                    if (!(await tryReconnectUsb())) await tryReconnectSerial();
+                } else {
+                    if (!(await tryReconnectSerial())) await tryReconnectUsb();
+                }
+            } catch (e) { /* نتابع - إذا ما نجح رح نرمي خطأ بالأسفل */ }
+
+            if (printerPort && printerPort.readable) {
+                return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
             }
-            await printerPort.open({ baudRate: getPrinterBaud() });
-            return printerPort;
+            if (usbPrinterDevice) {
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            // ما عندنا طابعة مقرونة سابقاً - نطلب من المستخدم يقرن وحدة (يفتح اختيار المتصفح)
+            if (hasSerial) {
+                try {
+                    printerPort = await navigator.serial.requestPort();
+                    await printerPort.open({ baudRate: getPrinterBaud() });
+                    setPrinterTransport('bt-serial');
+                    return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
+                } catch (e) { /* نجرب USB بالأسفل */ }
+            }
+            if (hasUsb) {
+                const device = await navigator.usb.requestDevice({ filters: [] });
+                await openAndClaimUsbPrinter(device);
+                setPrinterTransport('usb');
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            throw new Error('NO_PRINTER_API');
         }
 
         // رسم الفاتورة كصورة بيضاء/سوداء بعرض ورق الطابعة الحرارية بالضبط
@@ -3370,9 +3524,9 @@
                 return;
             }
 
-            if (getPrinterMode() === 'system' || !('serial' in navigator)) {
+            if (getPrinterMode() === 'system' || (!('serial' in navigator) && !('usb' in navigator))) {
                 // إما المستخدم اختار "نافذة الطباعة العادية دائماً" (موصى به مع RawBT على أندرويد)،
-                // أو المتصفح أصلاً ما يدعم الطباعة المباشرة
+                // أو المتصفح أصلاً ما يدعم أي طريقة اتصال مباشرة بالطابعة
                 window.print();
                 return;
             }
@@ -3381,10 +3535,8 @@
                 const canvas = buildReceiptCanvas(null);
                 const escposData = canvasToEscPosRaster(canvas);
 
-                const port = await ensurePrinterPort();
-                const writer = port.writable.getWriter();
-                await writer.write(escposData);
-                writer.releaseLock();
+                const conn = await ensurePrinterConnection();
+                await conn.write(escposData);
                 updatePrinterStatusUI(true);
             } catch (err) {
                 console.error('خطأ الطباعة المباشرة:', err);
@@ -3402,14 +3554,12 @@
                 if ('print' in window) window.print();
                 return;
             }
-            if (!('serial' in navigator)) return;
+            if (!('serial' in navigator) && !('usb' in navigator)) return;
             try {
                 const canvas = buildReceiptCanvas(invoiceNumber);
                 const escposData = canvasToEscPosRaster(canvas);
-                const port = await ensurePrinterPort();
-                const writer = port.writable.getWriter();
-                await writer.write(escposData);
-                writer.releaseLock();
+                const conn = await ensurePrinterConnection();
+                await conn.write(escposData);
                 updatePrinterStatusUI(true);
             } catch (err) {
                 console.error('تعذرت الطباعة التلقائية للفاتورة النهائية:', err);
